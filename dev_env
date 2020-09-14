@@ -1,0 +1,1 @@
+export FRP_ADAPTER_PORT="0.0.0.0:8888"
