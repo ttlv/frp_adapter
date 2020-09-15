@@ -95,11 +95,11 @@ func (handler *Handlers) FrpUpdate(w http.ResponseWriter, r *http.Request) {
 		}
 
 		// update Status
-		services, found, err := unstructured.NestedSlice(result.Object, "status", "services")
+		services, found, err := unstructured.NestedMap(result.Object, "status", "services")
 		if err != nil || !found || services == nil {
 			return fmt.Errorf("nodemaintenance services not found or error in spec: %v", err)
 		}
-		if err := unstructured.SetNestedField(services[0].(map[string]interface{}), r.FormValue("status"), "status"); err != nil {
+		if err := unstructured.SetNestedField(services, r.FormValue("status"), "status"); err != nil {
 			return fmt.Errorf("SetNestedField error: %v", err)
 		}
 
