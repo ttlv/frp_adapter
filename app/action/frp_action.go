@@ -82,6 +82,7 @@ func (handler *Handlers) FrpCreate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	helpers.RenderSuccessJSON(w, 200, "Frp client info is created into k8s successfully")
+	return
 }
 
 // 当frpc的状态更新时需要立即更新nodemaintenances资源
@@ -97,12 +98,14 @@ func (handler *Handlers) FrpUpdate(w http.ResponseWriter, r *http.Request) {
 		// update Status
 		services, found, err := unstructured.NestedMap(result.Object, "status", "services")
 		if err != nil || !found || services == nil {
-			return fmt.Errorf("nodemaintenance services not found or error in spec: %v", err)
+			return fmt.Errorf("nodemaintenance services not found or error in status: %v", err)
 		}
 		if err := unstructured.SetNestedField(services, r.FormValue("status"), "status"); err != nil {
 			return fmt.Errorf("SetNestedField error: %v", err)
 		}
-
+		if err := unstructured.SetNestedField(result.Object, services, "status", "services"); err != nil {
+			panic(err)
+		}
 		_, updateErr := handler.DynamicClient.Resource(handler.Res).Namespace(handler.NameSpace).Update(result, metav1.UpdateOptions{})
 		return updateErr
 	})
@@ -110,4 +113,6 @@ func (handler *Handlers) FrpUpdate(w http.ResponseWriter, r *http.Request) {
 		helpers.RenderFailureJSON(w, 400, fmt.Sprintf("update failed: %v", retryErr))
 		return
 	}
+	helpers.RenderSuccessJSON(w, 200, "Update Successfully")
+	return
 }
