@@ -7,8 +7,9 @@ require (
 	github.com/gorilla/sessions v1.2.1
 	github.com/imdario/mergo v0.3.11 // indirect
 	github.com/jinzhu/configor v1.2.0
-	github.com/jinzhu/gorm v1.9.16
 	github.com/rs/cors v1.7.0
+	golang.org/x/crypto v0.0.0-20191205180655-e7c4368fe9dd // indirect
+	golang.org/x/net v0.0.0-20200324143707-d3edc9973b7e // indirect
 	golang.org/x/time v0.0.0-20200630173020-3af7569d3a1e // indirect
 	k8s.io/apimachinery v0.17.2
 	k8s.io/client-go v0.17.2

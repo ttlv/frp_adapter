@@ -2,12 +2,10 @@ package home
 
 import (
 	"github.com/gorilla/sessions"
-	"github.com/jinzhu/gorm"
 	"net/http"
 )
 
 type Handlers struct {
-	DB           *gorm.DB
 	SessionStore *sessions.CookieStore
 }
 
