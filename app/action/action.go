@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"github.com/gorilla/sessions"
 	"github.com/ttlv/frp_adapter/app/helpers"
-	"github.com/ttlv/frp_adapter/http_server"
+	"github.com/ttlv/frp_adapter/kubeconfig_init"
 	"time"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -27,7 +27,7 @@ func NewHandlers(sessionStore *sessions.CookieStore) Handlers {
 func (handler *Handlers) FrpCreate(w http.ResponseWriter, r *http.Request) {
 	namespace := "default"
 
-	config, err := clientcmd.BuildConfigFromFlags("", *http_server.Kubeconfig)
+	config, err := clientcmd.BuildConfigFromFlags("", *kubeconfig_init.Kubeconfig)
 	if err != nil {
 		panic(err)
 	}
