@@ -26,62 +26,60 @@ func NewHandlers(sessionStore *sessions.CookieStore, dynamicClient dynamic.Inter
 	return Handlers{SessionStore: sessionStore, DynamicClient: dynamicClient, NameSpace: nameSpace, Res: res}
 }
 
-// 当有新的frpc注册时立即创建新的nodemaintenances对象,优先判断当前nodemaintenances对象是否存在，如果存在则不创建
+// 当有新的frpc注册时立即创建新的nodemaintenances对象
 func (handler *Handlers) FrpCreate(w http.ResponseWriter, r *http.Request) {
 	result, getErr := handler.DynamicClient.Resource(handler.Res).Namespace(handler.NameSpace).Get(fmt.Sprintf("nodemaintenances-%v", r.FormValue("unique_id")), metav1.GetOptions{})
 	if getErr != nil {
-		helpers.RenderFailureJSON(w, 400, fmt.Sprintf("failed to get latest version of NodeMaintenance: %v", getErr))
+		// 优先判断当前nodemaintenances对象是否存在，如果存在则不创建
+		nodeMaintenance := &unstructured.Unstructured{
+			Object: map[string]interface{}{
+				"apiVersion": "ke.harmonycloud.io/v1",
+				"kind":       "NodeMaintenance",
+				"metadata": map[string]interface{}{
+					"name":       fmt.Sprintf("nodemaintenances-%v", r.FormValue("unique_id")),
+					"labels":     map[string]interface{}{},
+					"annotation": map[string]interface{}{},
+				},
+				"spec": map[string]interface{}{
+					"nodeName": fmt.Sprintf("node-%v", r.FormValue("unique_id")),
+					"proxy": map[string]interface{}{
+						"type": "FRP",
+					},
+					"services": map[string]interface{}{
+						"name":               fmt.Sprintf("ssh-%v", r.FormValue("unique_id")),
+						"type":               "ssh",
+						"proxyPort":          r.FormValue("port"),
+						"frpServerIpAddress": r.FormValue("frp_server_ip_address"),
+						"uniqueID":           r.FormValue("unique_id"),
+					},
+				},
+				"status": map[string]interface{}{
+					"services": map[string]interface{}{
+						"name":       fmt.Sprintf("ssh-%v", r.FormValue("unique_id")),
+						"status":     r.FormValue("status"),
+						"lastUpdate": time.Now().UTC().Format("2006-01-02 15:04:05"),
+					},
+					"conditions": map[string]interface{}{
+						"name":      "Maintenable",
+						"status":    true,
+						"timeStamp": fmt.Sprintf("%v", time.Now().Unix()),
+					},
+				},
+			},
+		}
+		// Create Deployment
+		fmt.Println("Creating NodeMaintenance...")
+		_, err := handler.DynamicClient.Resource(handler.Res).Namespace(handler.NameSpace).Create(nodeMaintenance, metav1.CreateOptions{})
+		if err != nil {
+			helpers.RenderFailureJSON(w, 400, err.Error())
+			return
+		}
+		helpers.RenderSuccessJSON(w, 200, "Frp client info is created into k8s successfully")
 		return
 	}
 	if result != nil {
-		helpers.RenderFailureJSON(w, 400, fmt.Sprintf("%v is already exist", fmt.Sprintf("nodemaintenances-%v", r.FormValue("unique_id"))))
-		return
+		helpers.RenderFailureJSON(w, 400, fmt.Sprintf("%v is already exist and can't be created now", fmt.Sprintf("nodemaintenances-%v", r.FormValue("unique_id"))))
 	}
-	nodeMaintenance := &unstructured.Unstructured{
-		Object: map[string]interface{}{
-			"apiVersion": "ke.harmonycloud.io/v1",
-			"kind":       "NodeMaintenance",
-			"metadata": map[string]interface{}{
-				"name":       fmt.Sprintf("nodemaintenances-%v", r.FormValue("unique_id")),
-				"labels":     map[string]interface{}{},
-				"annotation": map[string]interface{}{},
-			},
-			"spec": map[string]interface{}{
-				"nodeName": fmt.Sprintf("node-%v", r.FormValue("unique_id")),
-				"proxy": map[string]interface{}{
-					"type": "FRP",
-				},
-				"services": map[string]interface{}{
-					"name":               fmt.Sprintf("ssh-%v", r.FormValue("unique_id")),
-					"type":               "ssh",
-					"proxyPort":          r.FormValue("port"),
-					"frpServerIpAddress": r.FormValue("frp_server_ip_address"),
-					"uniqueID":           r.FormValue("unique_id"),
-				},
-			},
-			"status": map[string]interface{}{
-				"services": map[string]interface{}{
-					"name":       fmt.Sprintf("ssh-%v", r.FormValue("unique_id")),
-					"status":     r.FormValue("status"),
-					"lastUpdate": time.Now().UTC().Format("2006-01-02 15:04:05"),
-				},
-				"conditions": map[string]interface{}{
-					"name":      "Maintenable",
-					"status":    true,
-					"timeStamp": fmt.Sprintf("%v", time.Now().Unix()),
-				},
-			},
-		},
-	}
-
-	// Create Deployment
-	fmt.Println("Creating NodeMaintenance...")
-	result, err := handler.DynamicClient.Resource(handler.Res).Namespace(handler.NameSpace).Create(nodeMaintenance, metav1.CreateOptions{})
-	if err != nil {
-		helpers.RenderFailureJSON(w, 400, err.Error())
-		return
-	}
-	helpers.RenderSuccessJSON(w, 200, "Frp client info is created into k8s successfully")
 	return
 }
 
