@@ -28,7 +28,6 @@ func NewHandlers(sessionStore *sessions.CookieStore, dynamicClient dynamic.Inter
 
 // 当有新的frpc注册时立即创建新的nodemaintenances对象
 func (handler *Handlers) FrpCreate(w http.ResponseWriter, r *http.Request) {
-
 	nodeMaintenance := &unstructured.Unstructured{
 		Object: map[string]interface{}{
 			"apiVersion": "ke.harmonycloud.io/v1",
@@ -57,6 +56,11 @@ func (handler *Handlers) FrpCreate(w http.ResponseWriter, r *http.Request) {
 					"status":     r.FormValue("status"),
 					"lastUpdate": time.Now().UTC().Format("2006-01-02 15:04:05"),
 				},
+			},
+			"conditions": map[string]interface{}{
+				"name":      "Maintenable",
+				"status":    true,
+				"timeStamp": fmt.Sprintf("%v", time.Now().Unix()),
 			},
 		},
 	}
