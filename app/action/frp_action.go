@@ -26,8 +26,17 @@ func NewHandlers(sessionStore *sessions.CookieStore, dynamicClient dynamic.Inter
 	return Handlers{SessionStore: sessionStore, DynamicClient: dynamicClient, NameSpace: nameSpace, Res: res}
 }
 
-// 当有新的frpc注册时立即创建新的nodemaintenances对象
+// 当有新的frpc注册时立即创建新的nodemaintenances对象,优先判断当前nodemaintenances对象是否存在，如果存在则不创建
 func (handler *Handlers) FrpCreate(w http.ResponseWriter, r *http.Request) {
+	result, getErr := handler.DynamicClient.Resource(handler.Res).Namespace(handler.NameSpace).Get(fmt.Sprintf("nodemaintenances-%v", r.FormValue("unique_id")), metav1.GetOptions{})
+	if getErr != nil {
+		helpers.RenderFailureJSON(w, 400, fmt.Sprintf("failed to get latest version of NodeMaintenance: %v", getErr))
+		return
+	}
+	if result != nil {
+		helpers.RenderFailureJSON(w, 400, fmt.Sprintf("%v is already exist", fmt.Sprintf("nodemaintenances-%v", r.FormValue("unique_id"))))
+		return
+	}
 	nodeMaintenance := &unstructured.Unstructured{
 		Object: map[string]interface{}{
 			"apiVersion": "ke.harmonycloud.io/v1",
@@ -70,8 +79,8 @@ func (handler *Handlers) FrpCreate(w http.ResponseWriter, r *http.Request) {
 	result, err := handler.DynamicClient.Resource(handler.Res).Namespace(handler.NameSpace).Create(nodeMaintenance, metav1.CreateOptions{})
 	if err != nil {
 		helpers.RenderFailureJSON(w, 400, err.Error())
+		return
 	}
-	fmt.Printf("Created NodeMaintenance %q.\n", result.GetName())
 	helpers.RenderSuccessJSON(w, 200, "Frp client info is created into k8s successfully")
 }
 
@@ -82,16 +91,16 @@ func (handler *Handlers) FrpUpdate(w http.ResponseWriter, r *http.Request) {
 		// RetryOnConflict uses exponential backoff to avoid exhausting the apiserver
 		result, getErr := handler.DynamicClient.Resource(handler.Res).Namespace(handler.NameSpace).Get(r.FormValue("node_maintenance_name"), metav1.GetOptions{})
 		if getErr != nil {
-			helpers.RenderFailureJSON(w, 400, fmt.Sprintf("failed to get latest version of NodeMaintenance: %v", getErr))
+			return fmt.Errorf("failed to get latest version of NodeMaintenance: %v", getErr)
 		}
 
 		// update Status
 		services, found, err := unstructured.NestedSlice(result.Object, "status", "services")
 		if err != nil || !found || services == nil {
-			helpers.RenderFailureJSON(w, 400, fmt.Sprintf("nodemaintenance services not found or error in spec: %v", err))
+			return fmt.Errorf("nodemaintenance services not found or error in spec: %v", err)
 		}
 		if err := unstructured.SetNestedField(services[0].(map[string]interface{}), r.FormValue("status"), "status"); err != nil {
-			helpers.RenderFailureJSON(w, 400, fmt.Sprintf("SetNestedField error: %v", err))
+			return fmt.Errorf("SetNestedField error: %v", err)
 		}
 
 		_, updateErr := handler.DynamicClient.Resource(handler.Res).Namespace(handler.NameSpace).Update(result, metav1.UpdateOptions{})
@@ -99,5 +108,6 @@ func (handler *Handlers) FrpUpdate(w http.ResponseWriter, r *http.Request) {
 	})
 	if retryErr != nil {
 		helpers.RenderFailureJSON(w, 400, fmt.Sprintf("update failed: %v", retryErr))
+		return
 	}
 }
