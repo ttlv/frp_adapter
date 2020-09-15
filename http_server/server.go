@@ -20,6 +20,6 @@ func New(sessionStore *sessions.CookieStore, dynamicClient dynamic.Interface) *c
 	router.Get("/", homeHandlers.Home)
 	actionHandlers := action.NewHandlers(sessionStore, dynamicClient, "default", schema.GroupVersionResource{Group: "ke.harmonycloud.io", Version: "v1", Resource: "nodemaintenances"})
 	router.Post("/frp_create", actionHandlers.FrpCreate)
-	router.Post("/frp_create", actionHandlers.FrpUpdate)
+	router.Post("/frp_update", actionHandlers.FrpUpdate)
 	return router
 }
