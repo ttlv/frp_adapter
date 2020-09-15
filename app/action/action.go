@@ -29,11 +29,11 @@ func (handler *Handlers) FrpCreate(w http.ResponseWriter, r *http.Request) {
 
 	config, err := clientcmd.BuildConfigFromFlags("", *kubeconfig_init.Kubeconfig)
 	if err != nil {
-		panic(err)
+		helpers.RenderFailureJSON(w, 400, err.Error())
 	}
 	client, err := dynamic.NewForConfig(config)
 	if err != nil {
-		panic(err)
+		helpers.RenderFailureJSON(w, 400, err.Error())
 	}
 
 	nodeMaintenanceRes := schema.GroupVersionResource{Group: "ke.harmonycloud.io", Version: "v1", Resource: "nodemaintenances"}
@@ -43,7 +43,7 @@ func (handler *Handlers) FrpCreate(w http.ResponseWriter, r *http.Request) {
 			"apiVersion": "ke.harmonycloud.io/v1",
 			"kind":       "NodeMaintenance",
 			"metadata": map[string]interface{}{
-				"name":       "edgenode",
+				"name":       fmt.Sprintf("nodemaintenances-%v", r.FormValue("unique_id")),
 				"labels":     map[string]interface{}{},
 				"annotation": map[string]interface{}{},
 			},
@@ -79,7 +79,7 @@ func (handler *Handlers) FrpCreate(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("Creating NodeMaintenance...")
 	result, err := client.Resource(nodeMaintenanceRes).Namespace(namespace).Create(nodeMaintenance, metav1.CreateOptions{})
 	if err != nil {
-		panic(err)
+		helpers.RenderFailureJSON(w, 400, err.Error())
 	}
 	fmt.Printf("Created NodeMaintenance %q.\n", result.GetName())
 	helpers.RenderSuccessJSON(w, 200, "Frp client info is created into k8s successfully")
