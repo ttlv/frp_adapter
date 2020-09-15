@@ -3,11 +3,10 @@ package action
 import (
 	"net/http"
 
-	"flag"
 	"fmt"
 	"github.com/gorilla/sessions"
 	"github.com/ttlv/frp_adapter/app/helpers"
-	"path/filepath"
+	"github.com/ttlv/frp_adapter/http_server"
 	"time"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -15,7 +14,6 @@ import (
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/client-go/dynamic"
 	"k8s.io/client-go/tools/clientcmd"
-	"k8s.io/client-go/util/homedir"
 )
 
 type Handlers struct {
@@ -27,17 +25,9 @@ func NewHandlers(sessionStore *sessions.CookieStore) Handlers {
 }
 
 func (handler *Handlers) FrpCreate(w http.ResponseWriter, r *http.Request) {
-	var kubeconfig *string
-	if home := homedir.HomeDir(); home != "" {
-		kubeconfig = flag.String("kubeconfig", filepath.Join(home, ".kube", "config"), "(optional) absolute path to the kubeconfig file")
-	} else {
-		kubeconfig = flag.String("kubeconfig", "", "absolute path to the kubeconfig file")
-	}
-	flag.Parse()
-
 	namespace := "default"
 
-	config, err := clientcmd.BuildConfigFromFlags("", *kubeconfig)
+	config, err := clientcmd.BuildConfigFromFlags("", *http_server.Kubeconfig)
 	if err != nil {
 		panic(err)
 	}
