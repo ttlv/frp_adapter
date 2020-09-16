@@ -140,9 +140,8 @@ func (handler *Handlers) FrpFetch(w http.ResponseWriter, r *http.Request) {
 		coreFrp             = entries.CoreFrp{}
 		ok                  bool
 	)
-	fmt.Println("------------", nodeMaintenanceName)
 	if nodeMaintenanceName == "" {
-		helpers.RenderFailureJSON(w, 400, "node_maintenance_name为空")
+		helpers.RenderFailureJSON(w, 400, "nodemaintenances name为空")
 		return
 	}
 	result, getErr := handler.DynamicClient.Resource(handler.Res).Namespace(handler.NameSpace).Get(nodeMaintenanceName, metav1.GetOptions{})
