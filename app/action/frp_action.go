@@ -119,6 +119,9 @@ func (handler *Handlers) FrpUpdate(w http.ResponseWriter, r *http.Request) {
 		if err := unstructured.SetNestedField(statusServices, r.FormValue("status"), "status"); err != nil {
 			return fmt.Errorf("SetNestedField error: %v", err)
 		}
+		if err := unstructured.SetNestedField(statusServices, time.Now().UTC().Format("2006-01-02 15:04:05"), "lastUpdate"); err != nil {
+			return fmt.Errorf("SetNestedField error: %v", err)
+		}
 		if err := unstructured.SetNestedField(result.Object, statusServices, "status", "services"); err != nil {
 			return fmt.Errorf("SetNestedField error: %v", err)
 		}
