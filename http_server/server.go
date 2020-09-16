@@ -21,6 +21,6 @@ func New(sessionStore *sessions.CookieStore, dynamicClient dynamic.Interface) *c
 	router.Get("/", homeHandlers.Home)
 	router.Get("/fetch/{name}", actionHandlers.FrpFetch) // GET /frp_adapter/fetch/xxxxxx
 	router.Post("/create", actionHandlers.FrpCreate)     // POST /frp_adapter/create
-	router.Put("/update", actionHandlers.FrpUpdate)      // PUT  /frp_adapter/update
+	router.Post("/update", actionHandlers.FrpUpdate)     // PUT  /frp_adapter/update
 	return router
 }
