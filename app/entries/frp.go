@@ -1,8 +1,7 @@
 package entries
 
-type Frp struct {
+type CoreFrp struct {
 	FrpServerIpAddress string `json:"frp_server_ip_address"`
-	UniqueID           string `json:"unique_id"`
-	Port               string `json:"port"`
+	ProxyPort          string `json:"proxy_port"`
 	Status             string `json:"status"`
 }

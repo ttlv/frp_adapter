@@ -1,6 +1,8 @@
 package action
 
 import (
+	"github.com/go-chi/chi"
+	"github.com/ttlv/frp_adapter/app/entries"
 	"k8s.io/client-go/dynamic"
 	"k8s.io/client-go/util/retry"
 	"net/http"
@@ -93,16 +95,32 @@ func (handler *Handlers) FrpUpdate(w http.ResponseWriter, r *http.Request) {
 			return fmt.Errorf("failed to get latest version of NodeMaintenance: %v", getErr)
 		}
 
-		// update Status
-		services, found, err := unstructured.NestedMap(result.Object, "status", "services")
-		if err != nil || !found || services == nil {
-			return fmt.Errorf("nodemaintenance services not found or error in status: %v", err)
+		// update Spec.Service.ProxyPort
+		specServices, found, err := unstructured.NestedMap(result.Object, "spec", "services")
+		if err != nil || !found || specServices == nil {
+			return fmt.Errorf("nodemaintenance services not found or error in spec.services: %v", err)
 		}
-		if err := unstructured.SetNestedField(services, r.FormValue("status"), "status"); err != nil {
+		if err := unstructured.SetNestedField(specServices, r.FormValue("port"), "proxyPort"); err != nil {
 			return fmt.Errorf("SetNestedField error: %v", err)
 		}
-		if err := unstructured.SetNestedField(result.Object, services, "status", "services"); err != nil {
-			panic(err)
+		// update Spec.Service.FrpServerIpAddress
+		if err := unstructured.SetNestedField(specServices, r.FormValue("frp_server_ip_address"), "frpServerIpAddress"); err != nil {
+			return fmt.Errorf("SetNestedField error: %v", err)
+		}
+		if err := unstructured.SetNestedField(result.Object, specServices, "spec", "services"); err != nil {
+			return fmt.Errorf("SetNestedField error: %v", err)
+		}
+
+		// update Status.Service.Status
+		statusServices, found, err := unstructured.NestedMap(result.Object, "status", "services")
+		if err != nil || !found || statusServices == nil {
+			return fmt.Errorf("nodemaintenance services not found or error in status.service: %v", err)
+		}
+		if err := unstructured.SetNestedField(statusServices, r.FormValue("status"), "status"); err != nil {
+			return fmt.Errorf("SetNestedField error: %v", err)
+		}
+		if err := unstructured.SetNestedField(result.Object, statusServices, "status", "services"); err != nil {
+			return fmt.Errorf("SetNestedField error: %v", err)
 		}
 		_, updateErr := handler.DynamicClient.Resource(handler.Res).Namespace(handler.NameSpace).Update(result, metav1.UpdateOptions{})
 		return updateErr
@@ -112,5 +130,43 @@ func (handler *Handlers) FrpUpdate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	helpers.RenderSuccessJSON(w, 200, "Update Successfully")
+	return
+}
+
+// Frps请求Frp Adapter获取nodemaintenances资源数据
+func (handler *Handlers) FrpFetch(w http.ResponseWriter, r *http.Request) {
+	var (
+		nodeMaintenanceName = chi.URLParam(r, "node_maintenance_name")
+		coreFrp             = entries.CoreFrp{}
+		ok                  bool
+	)
+	result, getErr := handler.DynamicClient.Resource(handler.Res).Namespace(handler.NameSpace).Get(nodeMaintenanceName, metav1.GetOptions{})
+	if getErr != nil {
+		helpers.RenderFailureJSON(w, 400, fmt.Sprintf("failed to get latest version of Deployment: %v", getErr))
+		return
+	}
+	specServices, found, err := unstructured.NestedMap(result.Object, "spec", "services")
+	if err != nil || !found || specServices == nil {
+		helpers.RenderFailureJSON(w, 400, fmt.Sprintf("nodemaintenance services not found or error in sepc.service: %v", err))
+		return
+	}
+	statusServices, found, err := unstructured.NestedMap(result.Object, "status", "services")
+	if err != nil || !found || statusServices == nil {
+		helpers.RenderFailureJSON(w, 400, fmt.Sprintf("nodemaintenance services not found or error in status.service: %v", err))
+		return
+	}
+	if coreFrp.FrpServerIpAddress, ok = specServices["frpServerIpAddress"].(string); !ok {
+		helpers.RenderFailureJSON(w, 400, "invalid value for FrpServerIpAddress")
+		return
+	}
+	if coreFrp.ProxyPort, ok = specServices["proxyPort"].(string); !ok {
+		helpers.RenderFailureJSON(w, 400, "invalid value for ProxyPort")
+		return
+	}
+	if coreFrp.Status, ok = statusServices["status"].(string); !ok {
+		helpers.RenderFailureJSON(w, 400, "invalid value for status")
+		return
+	}
+	helpers.RenderSuccessJSON(w, 200, coreFrp)
 	return
 }
