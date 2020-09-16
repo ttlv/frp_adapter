@@ -16,11 +16,15 @@ func New(sessionStore *sessions.CookieStore, dynamicClient dynamic.Interface) *c
 	router.Use(middleware.Logger)
 	router.Use(middleware.Recoverer)
 	router.Use(middleware.URLFormat)
-	homeHandlers := home.NewHandlers(sessionStore)
-	router.Get("/", homeHandlers.Home)
-	actionHandlers := action.NewHandlers(sessionStore, dynamicClient, "default", schema.GroupVersionResource{Group: "ke.harmonycloud.io", Version: "v1", Resource: "nodemaintenances"})
-	router.Post("/frp_create", actionHandlers.FrpCreate)
-	router.Post("/frp_update", actionHandlers.FrpUpdate)
-	router.Get("/frp_fetch/{name}", actionHandlers.FrpFetch)
+	router.Route("/frp_adapter", func(r chi.Router) {
+		var (
+			homeHandlers   = home.NewHandlers(sessionStore)
+			actionHandlers = action.NewHandlers(sessionStore, dynamicClient, "default", schema.GroupVersionResource{Group: "ke.harmonycloud.io", Version: "v1", Resource: "nodemaintenances"})
+		)
+		router.Get("/", homeHandlers.Home)
+		router.Get("/fetch/{name}", actionHandlers.FrpFetch) // GET /frp_adapter/fetch/xxxxxx
+		router.Post("/create", actionHandlers.FrpCreate)     // POST /frp_adapter/create
+		router.Put("/update", actionHandlers.FrpUpdate)      // PUT  /frp_adapter/update
+	})
 	return router
 }

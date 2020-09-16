@@ -140,6 +140,7 @@ func (handler *Handlers) FrpFetch(w http.ResponseWriter, r *http.Request) {
 		coreFrp             = entries.CoreFrp{}
 		ok                  bool
 	)
+	fmt.Println("------------", nodeMaintenanceName)
 	if nodeMaintenanceName == "" {
 		helpers.RenderFailureJSON(w, 400, "node_maintenance_name为空")
 		return
