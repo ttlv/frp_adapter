@@ -136,7 +136,7 @@ func (handler *Handlers) FrpUpdate(w http.ResponseWriter, r *http.Request) {
 // Frps请求Frp Adapter获取nodemaintenances资源数据
 func (handler *Handlers) FrpFetch(w http.ResponseWriter, r *http.Request) {
 	var (
-		nodeMaintenanceName = chi.URLParam(r, "node_maintenance_name")
+		nodeMaintenanceName = chi.URLParam(r, "name")
 		coreFrp             = entries.CoreFrp{}
 		ok                  bool
 	)

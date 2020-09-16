@@ -21,6 +21,6 @@ func New(sessionStore *sessions.CookieStore, dynamicClient dynamic.Interface) *c
 	actionHandlers := action.NewHandlers(sessionStore, dynamicClient, "default", schema.GroupVersionResource{Group: "ke.harmonycloud.io", Version: "v1", Resource: "nodemaintenances"})
 	router.Post("/frp_create", actionHandlers.FrpCreate)
 	router.Post("/frp_update", actionHandlers.FrpUpdate)
-	router.Get("/frp_fetch/{node_maintenance_name}", actionHandlers.FrpFetch)
+	router.Get("/frp_fetch/{name}", actionHandlers.FrpFetch)
 	return router
 }
