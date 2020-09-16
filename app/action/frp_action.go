@@ -142,7 +142,7 @@ func (handler *Handlers) FrpFetch(w http.ResponseWriter, r *http.Request) {
 	)
 	result, getErr := handler.DynamicClient.Resource(handler.Res).Namespace(handler.NameSpace).Get(nodeMaintenanceName, metav1.GetOptions{})
 	if getErr != nil {
-		helpers.RenderFailureJSON(w, 400, fmt.Sprintf("failed to get latest version of Deployment: %v", getErr))
+		helpers.RenderFailureJSON(w, 401, fmt.Sprintf("failed to get latest version of nodeMaintenance: %v", getErr))
 		return
 	}
 	specServices, found, err := unstructured.NestedMap(result.Object, "spec", "services")
