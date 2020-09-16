@@ -140,6 +140,10 @@ func (handler *Handlers) FrpFetch(w http.ResponseWriter, r *http.Request) {
 		coreFrp             = entries.CoreFrp{}
 		ok                  bool
 	)
+	if nodeMaintenanceName == "" {
+		helpers.RenderFailureJSON(w, 400, "node_maintenance_name为空")
+		return
+	}
 	result, getErr := handler.DynamicClient.Resource(handler.Res).Namespace(handler.NameSpace).Get(nodeMaintenanceName, metav1.GetOptions{})
 	if getErr != nil {
 		helpers.RenderFailureJSON(w, 401, fmt.Sprintf("failed to get latest version of nodeMaintenance: %v", getErr))
