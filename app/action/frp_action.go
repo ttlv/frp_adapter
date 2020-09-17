@@ -66,6 +66,11 @@ func (handler *Handlers) FrpCreate(w http.ResponseWriter, r *http.Request) {
 						"status":    true,
 						"timeStamp": fmt.Sprintf("%v", time.Now().Unix()),
 					},
+					"status": map[string]interface{}{
+						"nodeDeploymentStatus":    "",
+						"nodeDeploymentReference": "",
+						"timeStamp":               "",
+					},
 				},
 			},
 		}
