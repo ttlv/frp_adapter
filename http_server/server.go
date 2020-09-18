@@ -17,7 +17,7 @@ func New(sessionStore *sessions.CookieStore, dynamicClient dynamic.Interface) *c
 	router.Use(middleware.Recoverer)
 	router.Use(middleware.URLFormat)
 	homeHandlers := home.NewHandlers(sessionStore)
-	actionHandlers := action.NewHandlers(sessionStore, dynamicClient, "default", schema.GroupVersionResource{Group: "ke.harmonycloud.io", Version: "v1", Resource: "nodemaintenances"})
+	actionHandlers := action.NewHandlers(sessionStore, dynamicClient, "default", schema.GroupVersionResource{Group: "edge.harmonycloud.io", Version: "v1", Resource: "nodemaintenances"})
 	router.Get("/", homeHandlers.Home)
 	router.Get("/frp_fetch/{name}", actionHandlers.FrpFetch) // GET /frp_adapter/fetch/xxxxxx
 	router.Post("/frp_create", actionHandlers.FrpCreate)     // POST /frp_adapter/create
