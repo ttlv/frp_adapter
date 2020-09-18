@@ -35,7 +35,7 @@ func (handler *Handlers) FrpCreate(w http.ResponseWriter, r *http.Request) {
 		// 优先判断当前nodemaintenances对象是否存在，如果存在则不创建
 		nodeMaintenance := &unstructured.Unstructured{
 			Object: map[string]interface{}{
-				"apiVersion": "ke.harmonycloud.io/v1",
+				"apiVersion": "edge.harmonycloud.cn/v1alpha1",
 				"kind":       "NodeMaintenance",
 				"metadata": map[string]interface{}{
 					"name":       fmt.Sprintf("nodemaintenances-%v", r.FormValue("unique_id")),
@@ -45,7 +45,8 @@ func (handler *Handlers) FrpCreate(w http.ResponseWriter, r *http.Request) {
 				"spec": map[string]interface{}{
 					"nodeName": fmt.Sprintf("node-%v", r.FormValue("unique_id")),
 					"proxy": map[string]interface{}{
-						"type": "FRP",
+						"type":     "FRP",
+						"endpoint": "",
 					},
 					"services": map[string]interface{}{
 						"name":               fmt.Sprintf("ssh-%v", r.FormValue("unique_id")),
@@ -66,8 +67,8 @@ func (handler *Handlers) FrpCreate(w http.ResponseWriter, r *http.Request) {
 						"status":    true,
 						"timeStamp": fmt.Sprintf("%v", time.Now().Unix()),
 					},
-					"status": map[string]interface{}{
-						"nodeDeploymentStatus":    "",
+					"bindStatus": map[string]interface{}{
+						"phase":                   "",
 						"nodeDeploymentReference": "",
 						"timeStamp":               "",
 					},
