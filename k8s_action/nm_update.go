@@ -78,17 +78,23 @@ func NMNormalUpdate(dynamicClient dynamic.Interface, gvr schema.GroupVersionReso
 			if getErr != nil {
 				return fmt.Errorf("failed to get latest version of NodeMaintenance: %v", getErr)
 			}
-			err = unstructured.SetNestedField(result.Object, frpServer.PublicIpAddress, "spec", "services", "frpServerIpAddress")
-			if err != nil {
-				return fmt.Errorf("SetNestedField spec.services.frpServerIpAddress error: %v", err)
+			if frpServer.PublicIpAddress != "" {
+				err = unstructured.SetNestedField(result.Object, frpServer.PublicIpAddress, "spec", "services", "frpServerIpAddress")
+				if err != nil {
+					return fmt.Errorf("SetNestedField spec.services.frpServerIpAddress error: %v", err)
+				}
 			}
-			err = unstructured.SetNestedField(result.Object, frpServer.Port, "spec", "services", "proxyPort")
-			if err != nil {
-				return fmt.Errorf("SetNestedField spec.services.proxyPort error: %v", err)
+			if frpServer.Port != "" {
+				err = unstructured.SetNestedField(result.Object, frpServer.Port, "spec", "services", "proxyPort")
+				if err != nil {
+					return fmt.Errorf("SetNestedField spec.services.proxyPort error: %v", err)
+				}
 			}
-			err = unstructured.SetNestedField(result.Object, frpServer.Status, "status", "services", "status")
-			if err != nil {
-				return fmt.Errorf("SetNestedField status.services.status error: %v", err)
+			if frpServer.Status != "" {
+				err = unstructured.SetNestedField(result.Object, frpServer.Status, "status", "services", "status")
+				if err != nil {
+					return fmt.Errorf("SetNestedField status.services.status error: %v", err)
+				}
 			}
 			_, updateErr := dynamicClient.Resource(gvr).Update(result, metav1.UpdateOptions{}, "status")
 			return updateErr

@@ -19,6 +19,11 @@ func FetchFromFrps() (frpServers []model.FrpServer, err error) {
 	if resp, err = utils.Get(frp_adapter_init.FrpsConfig.Api, nil, headers); err != nil {
 		return
 	}
+	// Frps重启或者是当前没有frpc连入frps
+	if resp == `{"proxies":[]}` {
+		err = fmt.Errorf("当前无Frpc节点")
+		return
+	}
 	gjson.Get(resp, "proxies").ForEach(func(key, value gjson.Result) bool {
 		var frpServer model.FrpServer
 		if value.Get("public_ip_address").String() != "" {
