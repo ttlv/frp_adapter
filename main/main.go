@@ -6,6 +6,7 @@ import (
 	"github.com/ttlv/frp_adapter/frps_action/frps_fetch"
 	"github.com/ttlv/frp_adapter/http_server"
 	"github.com/ttlv/frp_adapter/k8s_action"
+	"github.com/ttlv/frp_adapter/model"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/client-go/dynamic"
 	"log"
@@ -15,7 +16,8 @@ import (
 func main() {
 	var (
 		dynamicClient dynamic.Interface
-		err           interface{}
+		err           error
+		results       []model.FrpServer
 		gvr           = schema.GroupVersionResource{Group: "edge.harmonycloud.cn", Version: "v1alpha1", Resource: "nodemaintenances"}
 	)
 	cs := cors.New(cors.Options{
@@ -25,14 +27,16 @@ func main() {
 		Debug:            true,
 	})
 	dynamicClient, err = frp_adapter_init.NewDynamicClient()
+	if err != nil {
+		panic(err)
+	}
 	defer func() {
-		if err = recover(); err != nil {
+		if r := recover(); r != nil {
 			log.Println("Frp Adapter has been recovered")
 		}
 	}()
 	// frp_adapter初始化获取frps的数据并更新到k8s集群
-	results, err := frps_fetch.FetchFromFrps()
-	if err != nil {
+	if results, err = frps_fetch.FetchFromFrps(); err != nil {
 		log.Print(err)
 	}
 	err = k8s_action.NMNormalUpdate(dynamicClient, gvr, results)
