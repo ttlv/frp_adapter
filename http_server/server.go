@@ -4,7 +4,7 @@ import (
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
 	"github.com/ttlv/frp_adapter/app/action/frp"
-	_ "github.com/ttlv/frp_adapter/app/action/reverse_proxy"
+	//"github.com/ttlv/frp_adapter/app/action/reverse_proxy"
 	"github.com/ttlv/frp_adapter/config"
 	"github.com/ttlv/frp_adapter/home"
 	"k8s.io/apimachinery/pkg/runtime/schema"
