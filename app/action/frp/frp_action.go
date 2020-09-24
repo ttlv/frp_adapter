@@ -62,7 +62,6 @@ func (handler *Handlers) FrpCreate(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		helpers.RenderSuccessJSON(w, 200, "Frp client info is created into k8s successfully")
-		return
 	}
 	if result != nil {
 		helpers.RenderFailureJSON(w, 400, fmt.Sprintf("%v is already exist and can't be created now", fmt.Sprintf("nodemaintenances-%v", r.FormValue("unique_id"))))
