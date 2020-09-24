@@ -1,11 +1,12 @@
 package main
 
 import (
-	"github.com/gorilla/sessions"
 	"github.com/rs/cors"
-	"github.com/ttlv/frp_adapter/config"
+	"github.com/ttlv/frp_adapter/frp_adapter_init"
+	"github.com/ttlv/frp_adapter/frps_action/frps_fetch"
 	"github.com/ttlv/frp_adapter/http_server"
-	"github.com/ttlv/frp_adapter/kubeconfig_init"
+	"github.com/ttlv/frp_adapter/k8s_action"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/client-go/dynamic"
 	"log"
 	"net/http"
@@ -13,9 +14,9 @@ import (
 
 func main() {
 	var (
-		cfg           = config.MustGetConfig()
 		dynamicClient dynamic.Interface
 		err           interface{}
+		gvr           = schema.GroupVersionResource{Group: "edge.harmonycloud.cn", Version: "v1alpha1", Resource: "nodemaintenances"}
 	)
 	cs := cors.New(cors.Options{
 		//AllowedOrigins:   []string{"http://localhost:3002"},
@@ -23,17 +24,27 @@ func main() {
 		AllowedHeaders:   []string{"Authorization"},
 		Debug:            true,
 	})
-	dynamicClient, err = kubeconfig_init.NewDynamicClient()
+	dynamicClient, err = frp_adapter_init.NewDynamicClient()
 	defer func() {
 		if err = recover(); err != nil {
 			log.Println("Frp Adapter has been recovered")
 		}
 	}()
-	sessionStore := sessions.NewCookieStore([]byte("GbeVMHok6yjFXTgDkwUzVMj"))
+	// frp_adapter初始化获取frps的数据并更新到k8s集群
+	results, err := frps_fetch.FetchFromFrps()
+	if err != nil {
+		log.Print(err)
+	}
+	err = k8s_action.NMNormalUpdate(dynamicClient, gvr, results)
+	if err != nil {
+		log.Println(err)
+	} else {
+		log.Println("Update NM successfully")
+	}
 
-	router := http_server.New(sessionStore, dynamicClient)
+	router := http_server.New(dynamicClient, frp_adapter_init.FrpsConfig, gvr)
 	handler := cs.Handler(router)
 
-	log.Printf("========== Visit http://localhost%v ==========\n", cfg.Port)
-	log.Fatal(http.ListenAndServe(cfg.Port, handler))
+	log.Printf("========== Visit http://%v ==========\n", frp_adapter_init.FrpAdapterConfig.Address)
+	log.Fatal(http.ListenAndServe(frp_adapter_init.FrpAdapterConfig.Address, handler))
 }

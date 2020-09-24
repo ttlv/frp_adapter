@@ -4,22 +4,43 @@ import (
 	"github.com/jinzhu/configor"
 )
 
-type Config struct {
-	Port string
+type FrpAdapterConfig struct {
+	Address string
 }
 
-var _config *Config
+type FrpsConfig struct {
+	HttpAuthUserName string
+	HttpAuthPassword string
+	Api              string
+}
 
-func MustGetConfig() Config {
-	if _config != nil {
-		return *_config
+var _frpAdapterConfig *FrpAdapterConfig
+var _frpsConfig *FrpsConfig
+
+func MustGetFrpAdapterConfig() FrpAdapterConfig {
+	if _frpAdapterConfig != nil {
+		return *_frpAdapterConfig
 	}
 
-	_config = &Config{}
-	err := configor.New(&configor.Config{ENVPrefix: "FRP_ADAPTER"}).Load(_config)
+	_frpAdapterConfig = &FrpAdapterConfig{}
+	err := configor.New(&configor.Config{ENVPrefix: "FRP_ADAPTER"}).Load(_frpAdapterConfig)
 	if err != nil {
 		panic(err)
 	}
 
-	return *_config
+	return *_frpAdapterConfig
+}
+
+func MustGetFrpsConfig() FrpsConfig {
+	if _frpsConfig != nil {
+		return *_frpsConfig
+	}
+
+	_frpsConfig = &FrpsConfig{}
+	err := configor.New(&configor.Config{ENVPrefix: "FRP_SERVER"}).Load(_frpsConfig)
+	if err != nil {
+		panic(err)
+	}
+
+	return *_frpsConfig
 }

@@ -9,8 +9,8 @@ type Handlers struct {
 	SessionStore *sessions.CookieStore
 }
 
-func NewHandlers(sessionStore *sessions.CookieStore) Handlers {
-	return Handlers{SessionStore: sessionStore}
+func NewHandlers() Handlers {
+	return Handlers{}
 }
 
 func (handlers Handlers) Home(w http.ResponseWriter, r *http.Request) {
