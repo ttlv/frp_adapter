@@ -16,9 +16,9 @@ func NMFetch(dynamicClient dynamic.Interface, gvr schema.GroupVersionResource) (
 		return
 	}
 	for _, list := range lists.Items {
-		nmNmae, found, err := unstructured.NestedString(list.Object, "metadata", "name")
-		if nmNmae == "" || !found || err != nil {
-			err = fmt.Errorf(fmt.Sprintf("NM fetch failed, err is: %v"))
+		nmNmae, found, getErr := unstructured.NestedString(list.Object, "metadata", "name")
+		if nmNmae == "" || !found || getErr != nil {
+			err = fmt.Errorf(fmt.Sprintf("NM fetch failed, err is: %v", getErr))
 			return
 		}
 		nms = append(nms, strings.Split(nmNmae, "-")[1])
