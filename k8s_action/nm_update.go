@@ -16,21 +16,19 @@ func InitNMUpdate(dynamicClient dynamic.Interface, gvr schema.GroupVersionResour
 	retryErr := retry.RetryOnConflict(retry.DefaultRetry, func() error {
 		// 初始化NodeMaintenanceStatus对象
 		// update Status.services
+
 		result, getErr := dynamicClient.Resource(gvr).Get(fmt.Sprintf("nodemaintenances-%v", uniqueID), metav1.GetOptions{})
 		if getErr != nil {
 			return fmt.Errorf("failed to get latest version of NodeMaintenance: %v", getErr)
 		}
-		err = unstructured.SetNestedField(result.Object, model.FrpOnline, "status", "services", "status")
+		servicesMap := make(map[string]interface{})
+		servicesMap["name"] = fmt.Sprintf("ssh-%v", uniqueID)
+		servicesMap["status"] = model.FrpOnline
+		servicesMap["lastUpdate"] = time.Now().UTC().Format("2006-01-02 15:04:05")
+
+		err = unstructured.SetNestedSlice(result.Object, []interface{}{servicesMap}, "status", "services")
 		if err != nil {
-			return fmt.Errorf("SetNestedField status.services.status error: %v", err)
-		}
-		err = unstructured.SetNestedField(result.Object, fmt.Sprintf("ssh-%v", uniqueID), "status", "services", "name")
-		if err != nil {
-			return fmt.Errorf("SetNestedField status.services.name error: %v", err)
-		}
-		err = unstructured.SetNestedField(result.Object, time.Now().UTC().Format("2006-01-02 15:04:05"), "status", "services", "lastUpdate")
-		if err != nil {
-			return fmt.Errorf("SetNestedField status.services.lastUpdate error: %v", err)
+			return fmt.Errorf("SetNestedField status.services error: %v", err)
 		}
 
 		//update Status.bindStatus
@@ -47,18 +45,15 @@ func InitNMUpdate(dynamicClient dynamic.Interface, gvr schema.GroupVersionResour
 			return fmt.Errorf("SetNestedField status.bindStatus.status error: %v", err)
 		}
 
+		conditionMap := make(map[string]interface{})
+		conditionMap["name"] = "maintainable"
+		conditionMap["status"] = true
+		conditionMap["timeStamp"] = time.Now().UTC().Format("2006-01-02 15:04:05")
+
 		//update Status.condition
-		err = unstructured.SetNestedField(result.Object, "maintainable", "status", "conditions", "name")
+		err = unstructured.SetNestedSlice(result.Object, []interface{}{conditionMap}, "status", "conditions")
 		if err != nil {
 			return fmt.Errorf("SetNestedField status.conditions.name error: %v", err)
-		}
-		err = unstructured.SetNestedField(result.Object, true, "status", "conditions", "status")
-		if err != nil {
-			return fmt.Errorf("SetNestedField status.conditions.status error: %v", err)
-		}
-		err = unstructured.SetNestedField(result.Object, time.Now().UTC().Format("2006-01-02 15:04:05"), "status", "conditions", "timeStamp")
-		if err != nil {
-			return fmt.Errorf("SetNestedField status.conditions.timeStamp error: %v", err)
 		}
 		_, updateErr := dynamicClient.Resource(gvr).Update(result, metav1.UpdateOptions{}, "status")
 		return updateErr
@@ -78,29 +73,88 @@ func NMNormalUpdate(dynamicClient dynamic.Interface, gvr schema.GroupVersionReso
 			if getErr != nil {
 				return fmt.Errorf("failed to get latest version of NodeMaintenance: %v", getErr)
 			}
-			if frpServer.PublicIpAddress != "" {
-				err = unstructured.SetNestedField(result.Object, frpServer.PublicIpAddress, "spec", "services", "frpServerIpAddress")
+			// update sepc.services
+			if frpServer.PublicIpAddress != "" && frpServer.Port != "" {
+				objs, _, err := unstructured.NestedSlice(result.Object, "spec", "services")
 				if err != nil {
-					return fmt.Errorf("SetNestedField spec.services.frpServerIpAddress error: %v", err)
+					return fmt.Errorf("NestedSlice spec.services error: %v", err)
+				}
+				for _, obj := range objs {
+					if obj.(map[string]interface{})["name"] == fmt.Sprintf("ssh-%v", frpServer.UniqueID) {
+						obj.(map[string]interface{})["frpServerIpAddress"] = frpServer.PublicIpAddress
+						obj.(map[string]interface{})["proxyPort"] = frpServer.Port
+					}
+				}
+				if err = unstructured.SetNestedSlice(result.Object, objs, "spec", "services"); err != nil {
+					return fmt.Errorf("SetNestedSlice spec.services error: %v", err)
 				}
 			}
-			if frpServer.Port != "" {
-				err = unstructured.SetNestedField(result.Object, frpServer.Port, "spec", "services", "proxyPort")
-				if err != nil {
-					return fmt.Errorf("SetNestedField spec.services.proxyPort error: %v", err)
-				}
-			}
+			// update status.services & update status.conditions
 			if frpServer.Status != "" {
-				err = unstructured.SetNestedField(result.Object, frpServer.Status, "status", "services", "status")
-				if err != nil {
-					return fmt.Errorf("SetNestedField status.services.status error: %v", err)
+				if frpServer.Status == model.FrpOnline {
+					// change status.conditions firstly
+					objs, _, err := unstructured.NestedSlice(result.Object, "status", "conditions")
+					if err != nil {
+						return fmt.Errorf("NestedSlice spec.conditions error: %v", err)
+					}
+					for _, obj := range objs {
+						obj.(map[string]interface{})["name"] = "maintainable"
+						obj.(map[string]interface{})["status"] = true
+						obj.(map[string]interface{})["timeStamp"] = time.Now().UTC().Format("2006-01-02 15:04:05")
+					}
+					if err = unstructured.SetNestedSlice(result.Object, objs, "status", "conditions"); err != nil {
+						return fmt.Errorf("SetNestedSlice status.conditions error: %v", err)
+					}
+					// change status.services
+					objs, _, err = unstructured.NestedSlice(result.Object, "status", "services")
+					if err != nil {
+						return fmt.Errorf("NestedSlice spec.services error: %v", err)
+					}
+					for _, obj := range objs {
+						if obj.(map[string]interface{})["name"] == fmt.Sprintf("ssh-%v", frpServer.UniqueID) {
+							obj.(map[string]interface{})["lastUpdate"] = time.Now().UTC().Format("2006-01-02 15:04:05")
+							obj.(map[string]interface{})["status"] = model.FrpOnline
+						}
+					}
+					if err = unstructured.SetNestedSlice(result.Object, objs, "status", "services"); err != nil {
+						return fmt.Errorf("SetNestedSlice status.services error: %v", err)
+					}
+				} else {
+					// change status.conditions firstly
+					objs, _, err := unstructured.NestedSlice(result.Object, "status", "conditions")
+					if err != nil {
+						return fmt.Errorf("NestedSlice spec.conditions error: %v", err)
+					}
+					// TODO 目前conditions只会存在一条记录，如果存在多条记录需要修改status,需要加一个name予以区分,当前没有name,所以直接强制更新。
+					for _, obj := range objs {
+						obj.(map[string]interface{})["name"] = "unmaintainable"
+						obj.(map[string]interface{})["status"] = false
+						obj.(map[string]interface{})["timeStamp"] = time.Now().UTC().Format("2006-01-02 15:04:05")
+					}
+					if err = unstructured.SetNestedSlice(result.Object, objs, "status", "conditions"); err != nil {
+						return fmt.Errorf("SetNestedSlice status.conditions error: %v", err)
+					}
+					// change status.services
+					objs, _, err = unstructured.NestedSlice(result.Object, "status", "services")
+					if err != nil {
+						return fmt.Errorf("NestedSlice spec.services error: %v", err)
+					}
+					for _, obj := range objs {
+						if obj.(map[string]interface{})["name"] == fmt.Sprintf("ssh-%v", frpServer.UniqueID) {
+							obj.(map[string]interface{})["lastUpdate"] = time.Now().UTC().Format("2006-01-02 15:04:05")
+							obj.(map[string]interface{})["status"] = model.FrpOffline
+						}
+					}
+					if err = unstructured.SetNestedSlice(result.Object, objs, "status", "services"); err != nil {
+						return fmt.Errorf("SetNestedSlice status.services error: %v", err)
+					}
 				}
 			}
 			_, updateErr := dynamicClient.Resource(gvr).Update(result, metav1.UpdateOptions{}, "status")
 			return updateErr
 		})
 		if retryErr != nil {
-			stringErr += fmt.Sprintf("[%v]%v \n", fmt.Sprintf("nodemaintenances-%v", frpServer.UniqueID), retryErr)
+			stringErr += fmt.Sprintf("[%v]update err: %v \n", fmt.Sprintf("nodemaintenances-%v", frpServer.UniqueID), retryErr)
 		}
 	}
 	if stringErr != "" {

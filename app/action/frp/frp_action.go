@@ -44,12 +44,14 @@ func (handler *Handlers) FrpCreate(w http.ResponseWriter, r *http.Request) {
 						"type":     "FRP",
 						"endpoint": "",
 					},
-					"services": map[string]interface{}{
-						"name":               fmt.Sprintf("ssh-%v", r.FormValue("unique_id")),
-						"type":               "ssh",
-						"proxyPort":          r.FormValue("port"),
-						"frpServerIpAddress": r.FormValue("frp_server_ip_address"),
-						"uniqueID":           r.FormValue("unique_id"),
+					"services": []map[string]interface{}{
+						{
+							"name":               fmt.Sprintf("ssh-%v", r.FormValue("unique_id")),
+							"type":               "ssh",
+							"proxyPort":          r.FormValue("port"),
+							"frpServerIpAddress": r.FormValue("frp_server_ip_address"),
+							"uniqueID":           r.FormValue("unique_id"),
+						},
 					},
 				},
 			},
