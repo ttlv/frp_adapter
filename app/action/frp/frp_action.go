@@ -5,11 +5,12 @@ import (
 	"github.com/go-chi/chi"
 	"github.com/ttlv/frp_adapter/app/entries"
 	"github.com/ttlv/frp_adapter/app/helpers"
-	"github.com/ttlv/frp_adapter/k8s_action"
 	"github.com/ttlv/frp_adapter/model"
+	"github.com/ttlv/frp_adapter/nm_action"
 	"k8s.io/client-go/dynamic"
 	"log"
 	"net/http"
+	"strings"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
@@ -70,7 +71,7 @@ func (handler *Handlers) FrpCreate(w http.ResponseWriter, r *http.Request) {
 		helpers.RenderFailureJSON(w, 400, fmt.Sprintf("%v is already exist and can't be created now", fmt.Sprintf("nodemaintenances-%v", r.FormValue("unique_id"))))
 	}
 	//初始化status对象
-	if err := k8s_action.InitNMUpdate(handler.DynamicClient, handler.GVR, r.FormValue("unique_id")); err != nil {
+	if err := nm_action.InitNMUpdate(handler.DynamicClient, handler.GVR, r.FormValue("unique_id")); err != nil {
 		helpers.RenderFailureJSON(w, 400, fmt.Sprintf("Init status object failed,err is: %v", err))
 		return
 	}
@@ -88,12 +89,12 @@ func (handler *Handlers) FrpUpdate(w http.ResponseWriter, r *http.Request) {
 		UniqueID:        r.FormValue("unique_id"),
 		Port:            r.FormValue("port"),
 	})
-	err := k8s_action.NmCreate(handler.DynamicClient, handler.GVR, frpServers)
+	err := nm_action.NmCreate(handler.DynamicClient, handler.GVR, frpServers)
 	if err != nil {
 		helpers.RenderFailureJSON(w, 400, fmt.Sprintf("created failed: %v", err))
 		return
 	}
-	err = k8s_action.NMNormalUpdate(handler.DynamicClient, handler.GVR, frpServers)
+	err = nm_action.NMNormalUpdate(handler.DynamicClient, handler.GVR, frpServers)
 	if err != nil {
 		helpers.RenderFailureJSON(w, 400, fmt.Sprintf("update failed: %v", err))
 		return
@@ -107,7 +108,6 @@ func (handler *Handlers) FrpFetch(w http.ResponseWriter, r *http.Request) {
 	var (
 		nodeMaintenanceName = chi.URLParam(r, "name")
 		coreFrp             = entries.CoreFrp{}
-		ok                  bool
 	)
 	if nodeMaintenanceName == "" {
 		helpers.RenderFailureJSON(w, 400, "nodemaintenances name为空")
@@ -118,28 +118,30 @@ func (handler *Handlers) FrpFetch(w http.ResponseWriter, r *http.Request) {
 		helpers.RenderFailureJSON(w, 401, fmt.Sprintf("failed to get latest version of nodeMaintenance: %v", getErr))
 		return
 	}
-	specServices, found, err := unstructured.NestedMap(result.Object, "spec", "services")
+	specServices, found, err := unstructured.NestedSlice(result.Object, "spec", "services")
 	if err != nil || !found || specServices == nil {
 		helpers.RenderFailureJSON(w, 400, fmt.Sprintf("nodemaintenance services not found or error in sepc.service: %v", err))
 		return
 	}
-	statusServices, found, err := unstructured.NestedMap(result.Object, "status", "services")
+	statusServices, found, err := unstructured.NestedSlice(result.Object, "status", "services")
 	if err != nil || !found || statusServices == nil {
 		helpers.RenderFailureJSON(w, 400, fmt.Sprintf("nodemaintenance services not found or error in status.service: %v", err))
 		return
 	}
-	if coreFrp.FrpServerIpAddress, ok = specServices["frpServerIpAddress"].(string); !ok {
-		helpers.RenderFailureJSON(w, 400, "invalid value for FrpServerIpAddress")
-		return
+	// frpServerIpAddress
+	for _, ss := range specServices {
+		if ss.(map[string]interface{})["name"] == fmt.Sprintf("ssh-%v", strings.Split(nodeMaintenanceName, "-")[0]) {
+			coreFrp.FrpServerIpAddress = ss.(map[string]interface{})["frpServerIpAddress"].(string)
+			coreFrp.ProxyPort = ss.(map[string]interface{})["proxyPort"].(string)
+		}
 	}
-	if coreFrp.ProxyPort, ok = specServices["proxyPort"].(string); !ok {
-		helpers.RenderFailureJSON(w, 400, "invalid value for ProxyPort")
-		return
+
+	for _, sss := range statusServices {
+		if sss.(map[string]interface{})["name"] == fmt.Sprintf("ssh-%v", strings.Split(nodeMaintenanceName, "-")[0]) {
+			coreFrp.Status = sss.(map[string]interface{})["status"].(string)
+		}
 	}
-	if coreFrp.Status, ok = statusServices["status"].(string); !ok {
-		helpers.RenderFailureJSON(w, 400, "invalid value for status")
-		return
-	}
+
 	helpers.RenderSuccessJSON(w, 200, coreFrp)
 	return
 }

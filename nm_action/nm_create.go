@@ -1,4 +1,4 @@
-package k8s_action
+package nm_action
 
 import (
 	"fmt"
