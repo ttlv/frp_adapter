@@ -80,6 +80,7 @@ func (handler *Handlers) FrpCreate(w http.ResponseWriter, r *http.Request) {
 
 // 当frpc的状态更新时需要立即更新nodemaintenances资源
 func (handler *Handlers) FrpUpdate(w http.ResponseWriter, r *http.Request) {
+	// 更新前判断nm资源是否存在，避免frpc已经接入frps但是没有nm对象的情况，如果不存在应该先创建
 	frpServers := []model.FrpServer{}
 	frpServers = append(frpServers, model.FrpServer{
 		PublicIpAddress: r.FormValue("frp_server_ip_address"),
@@ -87,7 +88,12 @@ func (handler *Handlers) FrpUpdate(w http.ResponseWriter, r *http.Request) {
 		UniqueID:        r.FormValue("unique_id"),
 		Port:            r.FormValue("port"),
 	})
-	err := k8s_action.NMNormalUpdate(handler.DynamicClient, handler.GVR, frpServers)
+	err := k8s_action.NmCreate(handler.DynamicClient, handler.GVR, frpServers)
+	if err != nil {
+		helpers.RenderFailureJSON(w, 400, fmt.Sprintf("created failed: %v", err))
+		return
+	}
+	err = k8s_action.NMNormalUpdate(handler.DynamicClient, handler.GVR, frpServers)
 	if err != nil {
 		helpers.RenderFailureJSON(w, 400, fmt.Sprintf("update failed: %v", err))
 		return

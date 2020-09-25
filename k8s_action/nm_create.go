@@ -54,8 +54,11 @@ func NmCreate(dynamicClient dynamic.Interface, gvr schema.GroupVersionResource, 
 			if result != nil {
 				log.Println(fmt.Sprintf("%v is already exist and can't be created now", fmt.Sprintf("nodemaintenances-%v", frpServer.UniqueID)))
 			}
-			//初始化status对象
-			if err := InitNMUpdate(dynamicClient, gvr, frpServer.UniqueID); err != nil {
+			//初始化status对象,使用NMNormalUpdate方法，因为frpc的状态可能是false
+			// 初始化 model.FrpServer对象
+			var fs []model.FrpServer
+			fs = append(fs, frpServer)
+			if err := NMNormalUpdate(dynamicClient, gvr, fs); err != nil {
 				return fmt.Errorf(fmt.Sprintf("Init status object failed,err is: %v", err))
 			}
 			log.Println(fmt.Sprintf("Init status object Successfully and init %v object successfully", fmt.Sprintf("nodemaintenances-%v", frpServer.UniqueID)))
