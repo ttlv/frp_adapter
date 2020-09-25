@@ -8,6 +8,7 @@ import (
 	"github.com/ttlv/frp_adapter/k8s_action"
 	"github.com/ttlv/frp_adapter/model"
 	"k8s.io/client-go/dynamic"
+	"log"
 	"net/http"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -57,13 +58,13 @@ func (handler *Handlers) FrpCreate(w http.ResponseWriter, r *http.Request) {
 			},
 		}
 		// Create Deployment
-		fmt.Println("Creating NodeMaintenance...")
+		log.Println("Creating NodeMaintenance...")
 		_, err := handler.DynamicClient.Resource(handler.GVR).Create(nodeMaintenance, metav1.CreateOptions{})
 		if err != nil {
 			helpers.RenderFailureJSON(w, 400, err.Error())
 			return
 		}
-		helpers.RenderSuccessJSON(w, 200, "Frp client info is created into k8s successfully")
+		helpers.RenderSuccessJSON(w, 200, fmt.Sprintf("nodemaintenances-%v is created successfully", r.FormValue("unique_id")))
 	}
 	if result != nil {
 		helpers.RenderFailureJSON(w, 400, fmt.Sprintf("%v is already exist and can't be created now", fmt.Sprintf("nodemaintenances-%v", r.FormValue("unique_id"))))

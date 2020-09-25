@@ -39,6 +39,14 @@ func main() {
 	if results, err = frps_fetch.FetchFromFrps(); err != nil {
 		log.Print(err)
 	}
+	// 如果在frp_adapter重启的期间，frps正常运行，此时恰好有新的frpc发起了连接，那么当前frpc的nm对象不会创建
+	// 因为frp_adapter正在启动中，会出现一种情况，frps有新的frpc注册，但是k8s中没有该frpc的nm对象，此情况需要
+	// frp_adapter初始化后遇到这种情况应该立刻去创建nm对象
+	err = k8s_action.NmCreate(dynamicClient, gvr, results)
+	// nm对象无法创建可能是k8s集群出了问题，此时重试也毫无意义，直接在日志中打印，等集群恢复正常，重启frps或者是重启frpc即可恢复正常。
+	if err != nil {
+		log.Println(err)
+	}
 	err = k8s_action.NMNormalUpdate(dynamicClient, gvr, results)
 	if err != nil {
 		log.Println(err)
