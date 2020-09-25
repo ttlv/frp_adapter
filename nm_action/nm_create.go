@@ -49,7 +49,7 @@ func NmCreate(dynamicClient dynamic.Interface, gvr schema.GroupVersionResource, 
 				if err != nil {
 					return err
 				}
-				log.Println("nodemaintenances-%v is created successfully", frpServer.UniqueID)
+				log.Printf("nodemaintenances-%v is created successfully", frpServer.UniqueID)
 			}
 			if result != nil {
 				log.Println(fmt.Sprintf("%v is already exist and can't be created now", fmt.Sprintf("nodemaintenances-%v", frpServer.UniqueID)))
