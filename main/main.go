@@ -57,82 +57,85 @@ func main() {
 			for _, result := range results {
 				frpsUniqueIDs = append(frpsUniqueIDs, result.UniqueID)
 			}
-			for _, unique_id := range frpsUniqueIDs {
-				for _, nm := range nms {
-					count := 0
-					if nm != unique_id {
-						count += 1
-					} else {
-						needUpdateUniqueIDs = append(needUpdateUniqueIDs, nm)
-					}
-					if count == len(nms) {
-						shortUniqueIDs = append(shortUniqueIDs, nm)
+			if len(nms) == 0 {
+				// shortUniqueIDs数组长度为0说明k8s中不存在nm对象，要把results全部创建
+				for _, result := range results {
+					if err = nm_action.InitNMUpdate(dynamicClient, gvr, result.UniqueID); err != nil {
+						log.Println(err)
 					}
 				}
-				// shortUniqueIDs数组长度为0说明k8s中不存在nm对象，要把results全部创建
-				if len(shortUniqueIDs) == 0 {
-					for _, result := range results {
-						if err = nm_action.InitNMUpdate(dynamicClient, gvr, result.UniqueID); err != nil {
+				if err = nm_action.NMNormalUpdate(dynamicClient, gvr, results); err != nil {
+					log.Println(err)
+				} else {
+					for _, short := range results {
+						log.Printf("update nodemaintenances-%v successfully", short.UniqueID)
+					}
+				}
+			} else {
+				for _, unique_id := range frpsUniqueIDs {
+					for _, nm := range nms {
+						count := 0
+						if nm != unique_id {
+							count += 1
+						} else {
+							needUpdateUniqueIDs = append(needUpdateUniqueIDs, nm)
+						}
+						if count == len(nms) {
+							shortUniqueIDs = append(shortUniqueIDs, nm)
+						}
+					}
+					// shortUniqueIDs数组长度为0说明frps与k8s中unique_id的个数相同
+					if len(shortUniqueIDs) == 0 {
+						log.Println("the number of unique_id is equal to the number of nodemaintenances which in k8s cluster")
+					} else {
+						for _, unique_id := range shortUniqueIDs {
+							for _, result := range results {
+								if result.UniqueID == unique_id {
+									shortFrps = append(shortFrps, result)
+								}
+							}
+						}
+						err = nm_action.NmCreate(dynamicClient, gvr, shortFrps)
+						// nm对象无法创建可能是k8s集群出了问题，此时重试也毫无意义，直接在日志中打印，等集群恢复正常，重启frps或者是重启frpc即可恢复正常。
+						if err != nil {
 							log.Println(err)
 						}
-					}
-					if err = nm_action.NMNormalUpdate(dynamicClient, gvr, results); err != nil {
-						log.Println(err)
-					} else {
-						for _, short := range results {
-							log.Printf("update nodemaintenances-%v successfully", short.UniqueID)
+						for _, unique_id := range shortUniqueIDs {
+							if err = nm_action.InitNMUpdate(dynamicClient, gvr, unique_id); err != nil {
+								log.Println(err)
+							}
 						}
-					}
-				} else {
-					for _, unique_id := range shortUniqueIDs {
-						for _, result := range results {
-							if result.UniqueID == unique_id {
-								shortFrps = append(shortFrps, result)
+
+						if err = nm_action.NMNormalUpdate(dynamicClient, gvr, shortFrps); err != nil {
+							log.Println(err)
+						} else {
+							for _, short := range shortFrps {
+								log.Printf("update nodemaintenances-%v successfully", short.UniqueID)
 							}
 						}
 					}
-					err = nm_action.NmCreate(dynamicClient, gvr, shortFrps)
-					// nm对象无法创建可能是k8s集群出了问题，此时重试也毫无意义，直接在日志中打印，等集群恢复正常，重启frps或者是重启frpc即可恢复正常。
-					if err != nil {
-						log.Println(err)
-					}
-					for _, unique_id := range shortUniqueIDs {
-						if err = nm_action.InitNMUpdate(dynamicClient, gvr, unique_id); err != nil {
-							log.Println(err)
-						}
-					}
-
-					if err = nm_action.NMNormalUpdate(dynamicClient, gvr, shortFrps); err != nil {
-						log.Println(err)
+					// needUpdateFrps数组长度为0说明没有需要更新的unique_id
+					if len(needUpdateUniqueIDs) == 0 {
+						log.Println("There are no another unique_ids which are needed to be updated")
 					} else {
-						for _, short := range shortFrps {
-							log.Printf("update nodemaintenances-%v successfully", short.UniqueID)
+						for _, result := range results {
+							for _, uniqueID := range needUpdateUniqueIDs {
+								if uniqueID == result.UniqueID {
+									needUpdateFrps = append(needUpdateFrps, result)
+								}
+							}
+						}
+						if err = nm_action.NMNormalUpdate(dynamicClient, gvr, needUpdateFrps); err != nil {
+							log.Println(err)
+						} else {
+							for _, update := range needUpdateFrps {
+								log.Printf("update nodemaintenances-%v successfully", update.UniqueID)
+							}
 						}
 					}
 				}
-			}
-
-			// 更新frps与k8s都有的unique_id,强制更新needUpdateUniqueIDs
-			for _, result := range results {
-				for _, uniqueID := range needUpdateUniqueIDs {
-					if uniqueID == result.UniqueID {
-						needUpdateFrps = append(needUpdateFrps, result)
-					}
-				}
-			}
-			// needUpdateFrps数组长度为0说明没有需要更新的unique_id
-			if len(needUpdateFrps) != 0 {
-				if err = nm_action.NMNormalUpdate(dynamicClient, gvr, needUpdateFrps); err != nil {
-					log.Println(err)
-				} else {
-					for _, update := range needUpdateFrps {
-						log.Printf("update nodemaintenances-%v successfully", update.UniqueID)
-					}
-				}
-			}
-			// k8s nm的unique_id比frps多的情况，要把这些多余的全部设置成offline和unmaintainable
-			// nms数组为0说明k8s中不存在nm对象，如果此frps中有unique_id,在shortUniqueIDs相关的逻辑中已经创建
-			if len(nms) != 0 {
+				// k8s nm的unique_id比frps多的情况，要把这些多余的全部设置成offline和unmaintainable
+				// 这种情况通常是废弃的unique_id,而frpa不会去删除这些无效的nm对象
 				for _, nm := range nms {
 					for _, unique_id := range frpsUniqueIDs {
 						count := 0
@@ -144,8 +147,10 @@ func main() {
 						}
 					}
 				}
-				// uselessUniqueIDs为0说明不存在k8s的unique_id比frps多的情
-				if len(uselessUniqueIDs) != 0 {
+				// uselessUniqueIDs数组长度为0则说明k8s中不存在废弃的unique_id
+				if len(uselessUniqueIDs) == 0 {
+					log.Println("There are no any useless unique_id in k8s cluster")
+				} else {
 					for _, unique_id := range uselessUniqueIDs {
 						for _, result := range results {
 							if result.UniqueID == unique_id {
@@ -161,6 +166,7 @@ func main() {
 						}
 					}
 				}
+
 			}
 		}
 	}
