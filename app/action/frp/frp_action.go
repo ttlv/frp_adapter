@@ -8,7 +8,6 @@ import (
 	"github.com/ttlv/frp_adapter/model"
 	"github.com/ttlv/frp_adapter/nm_action"
 	"k8s.io/client-go/dynamic"
-	"log"
 	"net/http"
 	"strings"
 
@@ -26,56 +25,22 @@ func NewHandlers(dynamicClient dynamic.Interface, gvr schema.GroupVersionResourc
 	return Handlers{DynamicClient: dynamicClient, GVR: gvr}
 }
 
-// 当有新的frpc注册时立即创建新的nodemaintenances对象
+// create new nodemaintenances crd resource obj when a new frp client register into frp server
 func (handler *Handlers) FrpCreate(w http.ResponseWriter, r *http.Request) {
-	result, getErr := handler.DynamicClient.Resource(handler.GVR).Get(fmt.Sprintf("nodemaintenances-%v", r.FormValue("unique_id")), metav1.GetOptions{})
-	if getErr != nil {
-		// 优先判断当前nodemaintenances对象是否存在，如果存在则不创建
-		nodeMaintenance := &unstructured.Unstructured{
-			Object: map[string]interface{}{
-				"apiVersion": "edge.harmonycloud.cn/v1alpha1",
-				"kind":       "NodeMaintenance",
-				"metadata": map[string]interface{}{
-					"name":       fmt.Sprintf("nodemaintenances-%v", r.FormValue("unique_id")),
-					"labels":     map[string]interface{}{},
-					"annotation": map[string]interface{}{},
-				},
-				"spec": map[string]interface{}{
-					"nodeName": fmt.Sprintf("node-%v", r.FormValue("unique_id")),
-					"proxy": map[string]interface{}{
-						"type":     "FRP",
-						"endpoint": "",
-					},
-					"services": []map[string]interface{}{
-						{
-							"name":               fmt.Sprintf("ssh-%v", r.FormValue("unique_id")),
-							"type":               "ssh",
-							"proxyPort":          r.FormValue("port"),
-							"frpServerIpAddress": r.FormValue("frp_server_ip_address"),
-							"uniqueID":           r.FormValue("unique_id"),
-						},
-					},
-				},
-			},
-		}
-		// Create Deployment
-		log.Println("Creating NodeMaintenance...")
-		_, err := handler.DynamicClient.Resource(handler.GVR).Create(nodeMaintenance, metav1.CreateOptions{})
-		if err != nil {
-			helpers.RenderFailureJSON(w, 400, err.Error())
-			return
-		}
-		helpers.RenderSuccessJSON(w, 200, fmt.Sprintf("nodemaintenances-%v is created successfully", r.FormValue("unique_id")))
-	}
-	if result != nil {
-		helpers.RenderFailureJSON(w, 400, fmt.Sprintf("%v is already exist and can't be created now", fmt.Sprintf("nodemaintenances-%v", r.FormValue("unique_id"))))
-	}
-	//初始化status对象
-	if err := nm_action.InitNMUpdate(handler.DynamicClient, handler.GVR, r.FormValue("unique_id")); err != nil {
-		helpers.RenderFailureJSON(w, 400, fmt.Sprintf("Init status object failed,err is: %v", err))
+	var (
+		nms []model.FrpServer
+	)
+	nms = append(nms, model.FrpServer{
+		PublicIpAddress: r.FormValue("frp_server_ip_address"),
+		Status:          model.FrpOnline,
+		UniqueID:        r.FormValue("unique_id"),
+		Port:            r.FormValue("port"),
+	})
+	if err := nm_action.NmCreate(handler.DynamicClient, handler.GVR, nms); err != nil {
+		helpers.RenderFailureJSON(w, http.StatusBadRequest, fmt.Sprintf("can't create nodemaintenances crd resource in k8s cluster,err is:%v", err))
 		return
 	}
-	helpers.RenderSuccessJSON(w, 200, fmt.Sprintf("Init status object Successfully and init %v object successfully", fmt.Sprintf("nodemaintenances-%v", r.FormValue("unique_id"))))
+	helpers.RenderSuccessJSON(w, 200, fmt.Sprintf("create nodemaintenances-%v crd resource in k8s cluster successfully", r.FormValue("unique_id")))
 	return
 }
 
