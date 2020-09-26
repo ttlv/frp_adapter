@@ -50,33 +50,43 @@ func main() {
 			log.Println(err)
 		} else {
 			var (
-				fprsUniqueIDs, shortUniqueIDs []string
-				tempFrps                      []model.FrpServer
+				fprsUniqueIDs, shortUniqueIDs, needUpdateUniqueIDs []string
+				shortFrps                                          []model.FrpServer
+				needUpdateFrps                                     []model.FrpServer
 			)
 
 			for _, result := range results {
 				fprsUniqueIDs = append(fprsUniqueIDs, result.UniqueID)
 			}
-			for _, nm := range nms {
-				count := 0
-				for index, unique_id := range fprsUniqueIDs {
+			for _, unique_id := range fprsUniqueIDs {
+				for index, nm := range nms {
+					count := 0
 					if nm != unique_id {
 						count += 1
+					} else {
+						needUpdateUniqueIDs = append(needUpdateUniqueIDs, nm)
 					}
 					if index == count {
 						shortUniqueIDs = append(shortUniqueIDs, nm)
 					}
 				}
-			}
-			for _, unique_id := range shortUniqueIDs {
-				for _, result := range results {
-					if result.UniqueID == unique_id {
-						tempFrps = append(tempFrps, result)
+				// shortUniqueIDs数组为0说明k8s中不存在nm对象，要把results全部创建
+				if len(shortUniqueIDs) == 0 {
+					for _, result := range results {
+						shortFrps = append(shortFrps, result)
+					}
+				} else {
+					for _, unique_id := range shortUniqueIDs {
+						for _, result := range results {
+							if result.UniqueID == unique_id {
+								shortFrps = append(shortFrps, result)
+							}
+						}
 					}
 				}
 			}
 
-			err = nm_action.NmCreate(dynamicClient, gvr, tempFrps)
+			err = nm_action.NmCreate(dynamicClient, gvr, shortFrps)
 			// nm对象无法创建可能是k8s集群出了问题，此时重试也毫无意义，直接在日志中打印，等集群恢复正常，重启frps或者是重启frpc即可恢复正常。
 			if err != nil {
 				log.Println(err)
@@ -87,7 +97,22 @@ func main() {
 				}
 			}
 
-			err = nm_action.NMNormalUpdate(dynamicClient, gvr, tempFrps)
+			err = nm_action.NMNormalUpdate(dynamicClient, gvr, shortFrps)
+			if err != nil {
+				log.Println(err)
+			} else {
+				log.Println("Update NM successfully")
+			}
+
+			// 更新frps与k8s都有的unique_id,强制更新needUpdateUniqueIDs
+			for _, result := range results {
+				for _, uniqueID := range needUpdateUniqueIDs {
+					if uniqueID == result.UniqueID {
+						needUpdateFrps = append(needUpdateFrps, result)
+					}
+				}
+			}
+			err = nm_action.NMNormalUpdate(dynamicClient, gvr, needUpdateFrps)
 			if err != nil {
 				log.Println(err)
 			} else {
