@@ -157,11 +157,9 @@ func main() {
 						log.Println("There are no any useless unique_id in k8s cluster")
 					} else {
 						for _, unique_id := range uselessUniqueIDs {
-							for _, result := range results {
-								if result.UniqueID == unique_id {
-									uselessFrps = append(uselessFrps, result)
-								}
-							}
+							uselessFrps = append(uselessFrps, model.FrpServer{
+								UniqueID: unique_id,
+							})
 						}
 						if err = nm_action.NMNormalUpdate(dynamicClient, gvr, uselessFrps); err != nil {
 							log.Println(err)
