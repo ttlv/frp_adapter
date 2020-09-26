@@ -99,8 +99,8 @@ func main() {
 			if err = nm_action.NMNormalUpdate(dynamicClient, gvr, shortFrps); err != nil {
 				log.Println(err)
 			} else {
-				for _, unique_id := range shortFrps {
-					log.Printf("update nodemaintenances-%v successfully", unique_id)
+				for _, short := range shortFrps {
+					log.Printf("update nodemaintenances-%v successfully", short.UniqueID)
 				}
 			}
 			// 更新frps与k8s都有的unique_id,强制更新needUpdateUniqueIDs
@@ -114,8 +114,8 @@ func main() {
 			if err = nm_action.NMNormalUpdate(dynamicClient, gvr, needUpdateFrps); err != nil {
 				log.Println(err)
 			} else {
-				for _, unique_id := range needUpdateFrps {
-					log.Printf("update nodemaintenances-%v successfully", unique_id)
+				for _, update := range needUpdateFrps {
+					log.Printf("update nodemaintenances-%v successfully", update.UniqueID)
 				}
 			}
 			// nm的unique_id比frps多的情况，要把这些多余的全部设置成offline和unmaintainable
@@ -141,8 +141,8 @@ func main() {
 				if err = nm_action.NMNormalUpdate(dynamicClient, gvr, uselessFrps); err != nil {
 					log.Println(err)
 				} else {
-					for _, unique_id := range uselessFrps {
-						log.Printf("update nodemaintenances-%v successfully", unique_id)
+					for _, useless := range uselessFrps {
+						log.Printf("update nodemaintenances-%v successfully", useless.UniqueID)
 					}
 				}
 			}
