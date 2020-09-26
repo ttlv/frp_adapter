@@ -87,7 +87,7 @@ func main() {
 							needUpdateUniqueIDs = append(needUpdateUniqueIDs, nm)
 						}
 						if count == len(nms) {
-							shortUniqueIDs = append(shortUniqueIDs, nm)
+							shortUniqueIDs = append(shortUniqueIDs, unique_id)
 						}
 					}
 					// shortUniqueIDs数组长度为0说明frps与k8s中unique_id的个数相同
@@ -148,7 +148,7 @@ func main() {
 								count += 1
 							}
 							if count == len(frpsUniqueIDs) {
-								uselessUniqueIDs = append(uselessUniqueIDs, unique_id)
+								uselessUniqueIDs = append(uselessUniqueIDs, nm)
 							}
 						}
 					}
