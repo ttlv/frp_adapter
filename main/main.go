@@ -69,10 +69,19 @@ func main() {
 						shortUniqueIDs = append(shortUniqueIDs, nm)
 					}
 				}
-				// shortUniqueIDs数组为0说明k8s中不存在nm对象，要把results全部创建
+				// shortUniqueIDs数组长度为0说明k8s中不存在nm对象，要把results全部创建
 				if len(shortUniqueIDs) == 0 {
 					for _, result := range results {
-						shortFrps = append(shortFrps, result)
+						if err = nm_action.InitNMUpdate(dynamicClient, gvr, result.UniqueID); err != nil {
+							log.Println(err)
+						}
+					}
+					if err = nm_action.NMNormalUpdate(dynamicClient, gvr, results); err != nil {
+						log.Println(err)
+					} else {
+						for _, short := range results {
+							log.Printf("update nodemaintenances-%v successfully", short.UniqueID)
+						}
 					}
 				} else {
 					for _, unique_id := range shortUniqueIDs {
@@ -82,27 +91,27 @@ func main() {
 							}
 						}
 					}
+					err = nm_action.NmCreate(dynamicClient, gvr, shortFrps)
+					// nm对象无法创建可能是k8s集群出了问题，此时重试也毫无意义，直接在日志中打印，等集群恢复正常，重启frps或者是重启frpc即可恢复正常。
+					if err != nil {
+						log.Println(err)
+					}
+					for _, unique_id := range shortUniqueIDs {
+						if err = nm_action.InitNMUpdate(dynamicClient, gvr, unique_id); err != nil {
+							log.Println(err)
+						}
+					}
+
+					if err = nm_action.NMNormalUpdate(dynamicClient, gvr, shortFrps); err != nil {
+						log.Println(err)
+					} else {
+						for _, short := range shortFrps {
+							log.Printf("update nodemaintenances-%v successfully", short.UniqueID)
+						}
+					}
 				}
 			}
 
-			err = nm_action.NmCreate(dynamicClient, gvr, shortFrps)
-			// nm对象无法创建可能是k8s集群出了问题，此时重试也毫无意义，直接在日志中打印，等集群恢复正常，重启frps或者是重启frpc即可恢复正常。
-			if err != nil {
-				log.Println(err)
-			}
-			for _, unique_id := range shortUniqueIDs {
-				if err = nm_action.InitNMUpdate(dynamicClient, gvr, unique_id); err != nil {
-					log.Println(err)
-				}
-			}
-
-			if err = nm_action.NMNormalUpdate(dynamicClient, gvr, shortFrps); err != nil {
-				log.Println(err)
-			} else {
-				for _, short := range shortFrps {
-					log.Printf("update nodemaintenances-%v successfully", short.UniqueID)
-				}
-			}
 			// 更新frps与k8s都有的unique_id,强制更新needUpdateUniqueIDs
 			for _, result := range results {
 				for _, uniqueID := range needUpdateUniqueIDs {
@@ -111,14 +120,18 @@ func main() {
 					}
 				}
 			}
-			if err = nm_action.NMNormalUpdate(dynamicClient, gvr, needUpdateFrps); err != nil {
-				log.Println(err)
-			} else {
-				for _, update := range needUpdateFrps {
-					log.Printf("update nodemaintenances-%v successfully", update.UniqueID)
+			// needUpdateFrps数组长度为0说明没有需要更新的unique_id
+			if len(needUpdateFrps) != 0 {
+				if err = nm_action.NMNormalUpdate(dynamicClient, gvr, needUpdateFrps); err != nil {
+					log.Println(err)
+				} else {
+					for _, update := range needUpdateFrps {
+						log.Printf("update nodemaintenances-%v successfully", update.UniqueID)
+					}
 				}
 			}
-			// nm的unique_id比frps多的情况，要把这些多余的全部设置成offline和unmaintainable
+			// k8s nm的unique_id比frps多的情况，要把这些多余的全部设置成offline和unmaintainable
+			// nms数组为0说明k8s中不存在nm对象，如果此frps中有unique_id,在shortUniqueIDs相关的逻辑中已经创建
 			if len(nms) != 0 {
 				for _, nm := range nms {
 					for _, unique_id := range frpsUniqueIDs {
@@ -131,18 +144,21 @@ func main() {
 						}
 					}
 				}
-				for _, unique_id := range uselessUniqueIDs {
-					for _, result := range results {
-						if result.UniqueID == unique_id {
-							uselessFrps = append(uselessFrps, result)
+				// uselessUniqueIDs为0说明不存在k8s的unique_id比frps多的情
+				if len(uselessUniqueIDs) != 0 {
+					for _, unique_id := range uselessUniqueIDs {
+						for _, result := range results {
+							if result.UniqueID == unique_id {
+								uselessFrps = append(uselessFrps, result)
+							}
 						}
 					}
-				}
-				if err = nm_action.NMNormalUpdate(dynamicClient, gvr, uselessFrps); err != nil {
-					log.Println(err)
-				} else {
-					for _, useless := range uselessFrps {
-						log.Printf("update nodemaintenances-%v successfully", useless.UniqueID)
+					if err = nm_action.NMNormalUpdate(dynamicClient, gvr, uselessFrps); err != nil {
+						log.Println(err)
+					} else {
+						for _, useless := range uselessFrps {
+							log.Printf("update nodemaintenances-%v successfully", useless.UniqueID)
+						}
 					}
 				}
 			}
