@@ -159,6 +159,7 @@ func main() {
 						for _, unique_id := range uselessUniqueIDs {
 							uselessFrps = append(uselessFrps, model.FrpServer{
 								UniqueID: unique_id,
+								Status:   model.FrpOffline,
 							})
 						}
 						if err = nm_action.NMNormalUpdate(dynamicClient, gvr, uselessFrps); err != nil {
