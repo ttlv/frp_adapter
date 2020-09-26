@@ -139,40 +139,39 @@ func main() {
 							}
 						}
 					}
-				}
-				// k8s nm的unique_id比frps多的情况，要把这些多余的全部设置成offline和unmaintainable
-				// 这种情况通常是废弃的unique_id,而frpa不会去删除这些无效的nm对象
-				for _, nm := range nms {
-					for _, unique_id := range frpsUniqueIDs {
-						count := 0
-						if unique_id != nm {
-							count += 1
-						}
-						if count == len(frpsUniqueIDs) {
-							uselessUniqueIDs = append(uselessUniqueIDs, unique_id)
-						}
-					}
-				}
-				// uselessUniqueIDs数组长度为0则说明k8s中不存在废弃的unique_id
-				if len(uselessUniqueIDs) == 0 {
-					log.Println("There are no any useless unique_id in k8s cluster")
-				} else {
-					for _, unique_id := range uselessUniqueIDs {
-						for _, result := range results {
-							if result.UniqueID == unique_id {
-								uselessFrps = append(uselessFrps, result)
+					// k8s nm的unique_id比frps多的情况，要把这些多余的全部设置成offline和unmaintainable
+					// 这种情况通常是废弃的unique_id,而frpa不会去删除这些无效的nm对象
+					for _, nm := range nms {
+						for _, unique_id := range frpsUniqueIDs {
+							count := 0
+							if unique_id != nm {
+								count += 1
+							}
+							if count == len(frpsUniqueIDs) {
+								uselessUniqueIDs = append(uselessUniqueIDs, unique_id)
 							}
 						}
 					}
-					if err = nm_action.NMNormalUpdate(dynamicClient, gvr, uselessFrps); err != nil {
-						log.Println(err)
+					// uselessUniqueIDs数组长度为0则说明k8s中不存在废弃的unique_id
+					if len(uselessUniqueIDs) == 0 {
+						log.Println("There are no any useless unique_id in k8s cluster")
 					} else {
-						for _, useless := range uselessFrps {
-							log.Printf("update nodemaintenances-%v successfully", useless.UniqueID)
+						for _, unique_id := range uselessUniqueIDs {
+							for _, result := range results {
+								if result.UniqueID == unique_id {
+									uselessFrps = append(uselessFrps, result)
+								}
+							}
+						}
+						if err = nm_action.NMNormalUpdate(dynamicClient, gvr, uselessFrps); err != nil {
+							log.Println(err)
+						} else {
+							for _, useless := range uselessFrps {
+								log.Printf("update nodemaintenances-%v successfully", useless.UniqueID)
+							}
 						}
 					}
 				}
-
 			}
 		}
 	}
