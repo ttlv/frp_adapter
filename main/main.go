@@ -59,16 +59,22 @@ func main() {
 			}
 			if len(nms) == 0 {
 				// shortUniqueIDs数组长度为0说明k8s中不存在nm对象，要把results全部创建
-				for _, result := range results {
-					if err = nm_action.InitNMUpdate(dynamicClient, gvr, result.UniqueID); err != nil {
-						log.Println(err)
-					}
-				}
-				if err = nm_action.NMNormalUpdate(dynamicClient, gvr, results); err != nil {
-					log.Println(err)
+				log.Println("There is not any unique_id in k8s cluster and frp adapter will create all nodemaintenances in k8s cluster")
+				if err = nm_action.NmCreate(dynamicClient, gvr, results); err != nil {
+					// 如果穿线无法创建的错误一般都是k8s集群存在问题，重试毫无意义，仅仅在日志中打印错误，不会继续后续的InitNMUpdate和NMNormalUpdate操作
+					log.Println("There are some fatal errors in k8s cluster")
 				} else {
-					for _, short := range results {
-						log.Printf("update nodemaintenances-%v successfully", short.UniqueID)
+					for _, result := range results {
+						if err = nm_action.InitNMUpdate(dynamicClient, gvr, result.UniqueID); err != nil {
+							log.Println(err)
+						}
+					}
+					if err = nm_action.NMNormalUpdate(dynamicClient, gvr, results); err != nil {
+						log.Println(err)
+					} else {
+						for _, short := range results {
+							log.Printf("update nodemaintenances-%v successfully", short.UniqueID)
+						}
 					}
 				}
 			} else {
