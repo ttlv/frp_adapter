@@ -50,23 +50,22 @@ func main() {
 			log.Println(err)
 		} else {
 			var (
-				fprsUniqueIDs, shortUniqueIDs, needUpdateUniqueIDs []string
-				shortFrps                                          []model.FrpServer
-				needUpdateFrps                                     []model.FrpServer
+				frpsUniqueIDs, shortUniqueIDs, needUpdateUniqueIDs, uselessUniqueIDs []string
+				shortFrps, needUpdateFrps, uselessFrps                               []model.FrpServer
 			)
 
 			for _, result := range results {
-				fprsUniqueIDs = append(fprsUniqueIDs, result.UniqueID)
+				frpsUniqueIDs = append(frpsUniqueIDs, result.UniqueID)
 			}
-			for _, unique_id := range fprsUniqueIDs {
-				for index, nm := range nms {
+			for _, unique_id := range frpsUniqueIDs {
+				for _, nm := range nms {
 					count := 0
 					if nm != unique_id {
 						count += 1
 					} else {
 						needUpdateUniqueIDs = append(needUpdateUniqueIDs, nm)
 					}
-					if index == count {
+					if count == len(nms) {
 						shortUniqueIDs = append(shortUniqueIDs, nm)
 					}
 				}
@@ -97,13 +96,11 @@ func main() {
 				}
 			}
 
-			err = nm_action.NMNormalUpdate(dynamicClient, gvr, shortFrps)
-			if err != nil {
+			if err = nm_action.NMNormalUpdate(dynamicClient, gvr, shortFrps); err != nil {
 				log.Println(err)
 			} else {
 				log.Println("Update NM successfully")
 			}
-
 			// 更新frps与k8s都有的unique_id,强制更新needUpdateUniqueIDs
 			for _, result := range results {
 				for _, uniqueID := range needUpdateUniqueIDs {
@@ -112,11 +109,36 @@ func main() {
 					}
 				}
 			}
-			err = nm_action.NMNormalUpdate(dynamicClient, gvr, needUpdateFrps)
-			if err != nil {
+			if err = nm_action.NMNormalUpdate(dynamicClient, gvr, needUpdateFrps); err != nil {
 				log.Println(err)
 			} else {
 				log.Println("Update NM successfully")
+			}
+			// nm的unique_id比frps多的情况，要把这些多余的全部设置成offline和unmaintainable
+			if len(nms) != 0 {
+				for _, nm := range nms {
+					for _, unique_id := range frpsUniqueIDs {
+						count := 0
+						if unique_id != nm {
+							count += 1
+						}
+						if count == len(frpsUniqueIDs) {
+							uselessUniqueIDs = append(uselessUniqueIDs, unique_id)
+						}
+					}
+				}
+				for _, unique_id := range uselessUniqueIDs {
+					for _, result := range results {
+						if result.UniqueID == unique_id {
+							uselessFrps = append(uselessFrps, result)
+						}
+					}
+				}
+				if err = nm_action.NMNormalUpdate(dynamicClient, gvr, uselessFrps); err != nil {
+					log.Println(err)
+				} else {
+					log.Println("Update NM successfully")
+				}
 			}
 		}
 	}
