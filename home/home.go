@@ -1,8 +1,8 @@
 package home
 
 import (
+	"github.com/gin-gonic/gin"
 	"github.com/gorilla/sessions"
-	"net/http"
 )
 
 type Handlers struct {
@@ -13,6 +13,6 @@ func NewHandlers() Handlers {
 	return Handlers{}
 }
 
-func (handlers Handlers) Home(w http.ResponseWriter, r *http.Request) {
-	w.Write([]byte("Frp Adapter Is Working Now...."))
+func (handlers Handlers) Home(c *gin.Context) {
+	c.Writer.Write([]byte("Frp Adapter Is Working Now...."))
 }

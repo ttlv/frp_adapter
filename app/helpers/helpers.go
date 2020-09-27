@@ -1,27 +1,35 @@
 package helpers
 
 import (
-	"encoding/json"
+	"github.com/gin-gonic/gin"
+	"github.com/gorilla/websocket"
+	"github.com/sirupsen/logrus"
 	"github.com/ttlv/frp_adapter/app/entries"
-	"net/http"
+	"time"
 )
 
-func RenderFailureJSON(w http.ResponseWriter, code int, message string) {
-	result, _ := json.Marshal(entries.Error{
+func RenderFailureJSON(c *gin.Context, code int, message string) {
+	c.JSON(code, entries.Error{
 		Error: entries.ErrorDetail{
 			Message: message,
-			Code:    code,
 		},
 	})
-	w.Header().Set("Content-Type", "application/json")
-	w.Write(result)
 }
 
-func RenderSuccessJSON(w http.ResponseWriter, code int, data interface{}) {
-	result, _ := json.Marshal(entries.Success{
-		Code: code,
+func RenderSuccessJSON(c *gin.Context, code int, data interface{}) {
+	c.JSON(code, entries.Success{
 		Data: data,
 	})
-	w.Header().Set("Content-Type", "application/json")
-	w.Write(result)
+}
+
+func WsErrorHandle(ws *websocket.Conn, err error) bool {
+	if err != nil {
+		logrus.WithError(err).Error("handler ws ERROR:")
+		dt := time.Now().Add(time.Second)
+		if err := ws.WriteControl(websocket.CloseMessage, []byte(err.Error()), dt); err != nil {
+			logrus.WithError(err).Error("websocket writes control message failed:")
+		}
+		return true
+	}
+	return false
 }

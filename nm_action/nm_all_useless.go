@@ -26,4 +26,5 @@ func MakeAllNMUseless(dynamicClient dynamic.Interface, gvr schema.GroupVersionRe
 		err = fmt.Errorf("can't make all nodemaintenances objects become useless")
 		return
 	}
+	return
 }

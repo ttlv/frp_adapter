@@ -146,4 +146,5 @@ func FrpAdapterCheck(dynamicClient dynamic.Interface, gvr schema.GroupVersionRes
 			}
 		}
 	}
+	return fmt.Errorf(errString)
 }
