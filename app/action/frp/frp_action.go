@@ -25,7 +25,7 @@ func NewHandlers(dynamicClient dynamic.Interface, gvr schema.GroupVersionResourc
 	return Handlers{DynamicClient: dynamicClient, GVR: gvr}
 }
 
-// create new nodemaintenances crd resource obj when a new frp client register into frp server
+// 当有新的frpc节点注册到frps时，创建NM对象
 func (handler *Handlers) FrpCreate(w http.ResponseWriter, r *http.Request) {
 	var (
 		nms []model.FrpServer
