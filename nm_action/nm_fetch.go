@@ -9,7 +9,7 @@ import (
 	"strings"
 )
 
-func NMFetch(dynamicClient dynamic.Interface, gvr schema.GroupVersionResource) (nms []string, err error) {
+func NMFetchAll(dynamicClient dynamic.Interface, gvr schema.GroupVersionResource) (nms []string, err error) {
 	lists, err := dynamicClient.Resource(gvr).List(metav1.ListOptions{})
 	if err != nil {
 		err = fmt.Errorf(fmt.Sprintf("NM fetch failed, err is: %v"))
@@ -24,4 +24,11 @@ func NMFetch(dynamicClient dynamic.Interface, gvr schema.GroupVersionResource) (
 		nms = append(nms, strings.Split(nmNmae, "-")[1])
 	}
 	return
+}
+
+func NMExist(dynamicClient dynamic.Interface, gvr schema.GroupVersionResource, uniqueID string) bool {
+	if _, getErr := dynamicClient.Resource(gvr).Get(fmt.Sprintf("nodemaintenances-%v", uniqueID), metav1.GetOptions{}); getErr == nil {
+		return true
+	}
+	return false
 }

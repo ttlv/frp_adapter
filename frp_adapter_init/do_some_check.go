@@ -19,7 +19,7 @@ func FrpAdapterCheck(dynamicClient dynamic.Interface, gvr schema.GroupVersionRes
 		nms       []string
 		errString string
 	)
-	if nms, err = nm_action.NMFetch(dynamicClient, gvr); err != nil {
+	if nms, err = nm_action.NMFetchAll(dynamicClient, gvr); err != nil {
 		errString += fmt.Sprintf("%v \n", err)
 	} else {
 		var (

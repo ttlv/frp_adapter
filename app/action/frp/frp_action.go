@@ -46,23 +46,29 @@ func (handler *Handlers) FrpCreate(c *gin.Context) {
 
 // 当frpc的状态更新时需要立即更新nodemaintenances资源
 func (handler *Handlers) FrpUpdate(c *gin.Context) {
-	// 更新前判断nm资源是否存在，避免frpc已经接入frps但是没有nm对象的情况，如果不存在应该先创建
-	frpServers := []model.FrpServer{}
+	var (
+		err        error
+		frpServers = []model.FrpServer{}
+	)
 	frpServers = append(frpServers, model.FrpServer{
 		PublicIpAddress: c.PostForm("frp_server_ip_address"),
 		Status:          c.PostForm("status"),
 		UniqueID:        c.PostForm("unique_id"),
 		Port:            c.PostForm("port"),
 	})
-	err := nm_action.NmCreate(handler.DynamicClient, handler.GVR, frpServers)
-	if err != nil {
-		helpers.RenderFailureJSON(c, http.StatusBadRequest, fmt.Sprintf("created failed: %v", err))
-		return
-	}
-	err = nm_action.NMNormalUpdate(handler.DynamicClient, handler.GVR, frpServers)
-	if err != nil {
-		helpers.RenderFailureJSON(c, http.StatusBadRequest, fmt.Sprintf("update failed: %v", err))
-		return
+	// 更新前判断nm资源是否存在，避免frpc已经接入frps但是没有nm对象的情况，如果不存在应该先创建
+	if !nm_action.NMExist(handler.DynamicClient, handler.GVR, c.PostForm("unique_id")) {
+		err = nm_action.NmCreate(handler.DynamicClient, handler.GVR, frpServers)
+		if err != nil {
+			helpers.RenderFailureJSON(c, http.StatusBadRequest, fmt.Sprintf("created failed: %v", err))
+			return
+		}
+	} else {
+		err = nm_action.NMNormalUpdate(handler.DynamicClient, handler.GVR, frpServers)
+		if err != nil {
+			helpers.RenderFailureJSON(c, http.StatusBadRequest, fmt.Sprintf("update failed: %v", err))
+			return
+		}
 	}
 	helpers.RenderSuccessJSON(c, http.StatusOK, "Update Successfully")
 	return

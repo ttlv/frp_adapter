@@ -12,7 +12,7 @@ func MakeAllNMUseless(dynamicClient dynamic.Interface, gvr schema.GroupVersionRe
 		uselessUniqueIDs []string
 		uselessNMs       []model.FrpServer
 	)
-	if uselessUniqueIDs, err = NMFetch(dynamicClient, gvr); err != nil {
+	if uselessUniqueIDs, err = NMFetchAll(dynamicClient, gvr); err != nil {
 		err = fmt.Errorf("can't fetch nodemaintenances objects from k8s cluster")
 		return
 	}
