@@ -1,0 +1,32 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: frp-adapter
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: frp-adapter
+  template:
+    metadata:
+      labels:
+        app: frp-adapter
+    spec:
+      containers:
+      - name: frp-adapter
+        image: gopherlv/frp-adapter:frp-adapter-9f9c0d6b
+        env:
+          - name: FRP_ADAPTER_ADDRESS
+            value: :8888
+          - name: FRP_SERVER_HTTPAUTHUSERNAME
+            value: admin
+          - name: FRP_SERVER_HTTPAUTHPASSWORD
+            value: admin
+          - name: FRP_SERVER_API
+            value: http://10.1.11.38:7500/api/proxy/tcp
+        imagePullPolicy: Always
+        securityContext:
+          privileged: true
+      nodeSelector:
+        kubernetes.io/hostname: k8s-node-38
+      restartPolicy: Always
