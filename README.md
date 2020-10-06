@@ -210,7 +210,7 @@ Frps与Frpc的均基于0.33版本的Frp源码进行了一定程度的修改，�
 
 ## 社区
 
-如果您觉得 Frp Adapter对您有帮助，请扫描下方群二维码，如果群满，请加微信 `handsomett950602` 并注明`zeus 开源交流`,欢迎各位老板赏咖啡支持微信支付和比特币充值，欢迎提issue。
+如果您觉得 Frp Adapter对您有帮助，请扫描下方群二维码，如果群满，请加微信 `handsomett950602` 并注明`Frp Adapter 开源交流`,欢迎各位老板赏咖啡支持微信支付和比特币充值，欢迎提issue。
 
 <p align="center">
     <img src="https://ocx.oss-cn-hangzhou.aliyuncs.com/dev/coinx-admin/banners/1/we_chat_scan_code.jpg" height="360">
@@ -219,4 +219,4 @@ Frps与Frpc的均基于0.33版本的Frp源码进行了一定程度的修改，�
 </p>
 
 
-再次特别鸣谢 Frp的作者
+在此特别鸣谢 Frp的作者
