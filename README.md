@@ -108,7 +108,7 @@ web或者是cli以websocket的形式发起请求，建立连接，以ssh方式�
 
 # Frp Adapter架构设计图
 
-![image-20201005113017221](https://images-1253546493.cos.ap-shanghai.myqcloud.com/frpa.jpg)
+![Frp Adapter 架构图](https://images-1253546493.cos.ap-shanghai.myqcloud.com/frpa.jpg)
 
 
 
