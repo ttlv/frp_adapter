@@ -196,7 +196,7 @@ export FRP_SERVER_API="http://10.1.11.38:7500/api/proxy/tcp" // frps server api
 
 Frps与Frpc的均基于0.33版本的Frp源码进行了一定程度的修改，想要使用Frp Adapter请参考修改以后的Frps宇Frpc的源码
 
-[适配Frp Adapter的Frpd的源码版本,注意是master分支](https://github.com/ttlv/frp )
+[适配Frp Adapter的Frp的源码版本,注意是master分支](https://github.com/ttlv/frp )
 
 [Frp的源码传送门](https://github.com/fatedier/frp)
 
