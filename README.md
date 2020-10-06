@@ -20,7 +20,7 @@ Frp 是一个专注于内网穿透的高性能的反向代理应用，支持 TCP
 
 ## 3.1 Frpa简介
 
-Frp Adapter作为介于k8s与Frps的中间HTTP服务，诞生的目的就是为了解决Frpc与Frps的状态维护的问题，基于现有的业务场景，Frps与Frpc的状态对于业务来说非常重要，所以需要有一个中间的服务可以承上启下去对接Frps与k8s集群，实时的去维护Frpc与Frps的状态。维护状态并未使用关系型数据库，而是将状态数据直接存储到ETCD中，从而设计了一套CRD(ps:frpa的意义就是维护CRD的状态)虽然这有悖于k8s声明式API的设计思想,对于业务而言，这还是一种比较合适的实现方式。
+Frp Adapter作为介于k8s与Frps的中间HTTP服务，诞生的目的就是为了解决Frpc与Frps的状态维护的问题，基于现有的业务场景，Frps与Frpc的状态对于业务来说非常重要，所以需要有一个中间的服务可以承上启下去对接Frps与k8s集群，实时的去维护Frpc与Frps的状态。维护状态并未使用关系型数据库，而是将状态数据直接存储到ETCD中，从而设计了一套CRD(ps:frpa的意义就是维护CRD的状态)虽然这有悖于k8s声明式API的设计思想,对于业务而言，这还是一种比较合适的实现方式。注意这里仅仅只有CRD并没有controller，FrpA并没有以controller的形式开发，作为一个单独后端服务提供API接口。
 
 ## 3.2 Frpa功能
 
@@ -194,10 +194,13 @@ export FRP_SERVER_API="http://10.1.11.38:7500/api/proxy/tcp" // frps server api
 
 ## 6. 注意事项
 
-Frps与Frpc的均基于0.33版本的Frp源码进行了一定程度的修改，想要使用Frp Adapter请参考修改以后的Frps宇Frpc的源码，修改后的源码传送门 
+Frps与Frpc的均基于0.33版本的Frp源码进行了一定程度的修改，想要使用Frp Adapter请参考修改以后的Frps宇Frpc的源码
 
-[适配Frp Adapter的Frpd的源码版本,注意是master分支]: https://github.com/ttlv/frp
-[Frp的源码传送门]: https://github.com/fatedier/frp
+[适配Frp Adapter的Frpd的源码版本,注意是master分支](https://github.com/ttlv/frp)
+
+[Frp的源码传送门](https://github.com/fatedier/frp)
+
+[NodeMaintenances CRD定义](https://github.com/ttlv/nodemaintenances)
 
 ## 7. 开发者
 
@@ -218,5 +221,4 @@ Frps与Frpc的均基于0.33版本的Frp源码进行了一定程度的修改，�
     <img src="https://ocx.oss-cn-hangzhou.aliyuncs.com/dev/coinx-admin/banners/1/btc_deposit_scan_code.jpg" height="360">
 </p>
 
-
-在此特别鸣谢 Frp的作者
+再次特别鸣谢 Frp的作者
