@@ -1,4 +1,4 @@
-![golang](https://img.shields.io/badge/golang-1.14.0-green.svg?style=plastic)]
+![golang](https://img.shields.io/badge/golang-1.14.0-green.svg?style=plastic)
 
 # 1. 应用背景
 
