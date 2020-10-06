@@ -1,3 +1,7 @@
+```
+[![golang](https://img.shields.io/badge/golang-1.14.0-green.svg?style=plastic)](https://www.golang.org/)
+```
+
 # 1. 应用背景
 
 在传统的Cloud与Edge的架构中，Edge Side基于NAT(Network Address Translation)网络，边缘节点集群可绑定一个公网IP，可以实现边到云的访问。但是在实际场景中，很多时候都需要实现从云端直接访问边缘端的需求，比如说运维人员需要在某些时候ssh登陆到指定的边缘节点进行操作。现有比较成熟的就是FRP内网穿透方案。从而解决从外网访问内网机器的需求。
@@ -190,4 +194,30 @@ export FRP_SERVER_HTTPAUTHPASSWORD="admin" // frps http auth password
 export FRP_SERVER_API="http://10.1.11.38:7500/api/proxy/tcp" // frps server api
 ```
 
+## 6. 注意事项
 
+Frps与Frpc的均基于0.33版本的Frp源码进行了一定程度的修改，想要使用Frp Adapter请参考修改以后的Frps宇Frpc的源码，修改后的源码传送门 
+
+[适配Frp Adapter的Frpd的源码版本,注意是master分支]: https://github.com/ttlv/frp
+[Frp的源码传送门]: https://github.com/fatedier/frp
+
+## 7. 开发者
+
+* [ttlv](http://github.com/ttlv)
+
+
+## 贡献代码
+
+非常欢迎优秀的开发者来贡献Frp Adapter。在提Pull Request之前，请首先阅读源码，了解原理和架构。如果不懂的可以加他的微信 `handsomett950602` 注明 `Frp Adapter`。
+
+## 社区
+
+如果您觉得 Frp Adapter对您有帮助，请扫描下方群二维码，如果群满，请加微信 `handsomett950602` 并注明`zeus 开源交流`,欢迎各位老板赏咖啡支持微信支付和比特币充值，欢迎提issue。
+
+<p align="center">
+    <img src="https://ocx.oss-cn-hangzhou.aliyuncs.com/dev/coinx-admin/banners/1/we_chat_scan_code.jpg" height="360">
+    <img src="https://ocx.oss-cn-hangzhou.aliyuncs.com/dev/coinx-admin/banners/1/we_chat_pay_scan_code.jpeg" height="360">
+    <img src="https://ocx.oss-cn-hangzhou.aliyuncs.com/dev/coinx-admin/banners/1/btc_deposit_scan_code.jpg" height="360">
+</p>
+
+在此特别鸣谢 Frp的作者
