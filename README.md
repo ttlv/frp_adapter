@@ -1,6 +1,4 @@
-```
-[![golang](https://img.shields.io/badge/golang-1.14.0-green.svg?style=plastic)](https://www.golang.org/)
-```
+![golang](https://img.shields.io/badge/golang-1.14.0-green.svg?style=plastic)](https://www.golang.org)
 
 # 1. 应用背景
 
@@ -220,4 +218,5 @@ Frps与Frpc的均基于0.33版本的Frp源码进行了一定程度的修改，�
     <img src="https://ocx.oss-cn-hangzhou.aliyuncs.com/dev/coinx-admin/banners/1/btc_deposit_scan_code.jpg" height="360">
 </p>
 
-在此特别鸣谢 Frp的作者
+
+再次特别鸣谢 Frp的作者
