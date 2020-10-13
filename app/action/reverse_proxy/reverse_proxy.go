@@ -30,7 +30,7 @@ func NewHandlers(readBufferSize, writeBufferSize int) Handlers {
 	}}
 }
 
-// Frp反向代理
+// Frp反向代理,建立ssh长连接
 func (handler *Handlers) ReverseProxy(c *gin.Context) {
 	// 解析url,获取url中的nodemaintenances_name
 	var (
@@ -62,11 +62,11 @@ func (handler *Handlers) ReverseProxy(c *gin.Context) {
 		// 找到本次post请求需要进行反向代理的节点
 		if frpc.UniqueID == strings.Split(nodemaintenances_name, "-")[1] {
 			// 如果frpc的节点状态是离线则无法进行反向代理
+			// 确认frpc节点当前是online状态之后再继续进行后续的操作
 			if frpc.Status == model.FrpOffline {
 				helpers.RenderFailureJSON(c, http.StatusBadRequest, fmt.Sprintf("frp client %v is offline now", frpc.UniqueID))
 				return
 			}
-			// 确认frpc节点当前是online状态之后再继续进行后续的操作
 			// 当rows或者是cols有一个为空则设置一个默认值,cols用以设置web终端的列高，rows用以设置web终端的宽
 			if sRows == "" || sCols == "" {
 				sRows = "88"
@@ -107,6 +107,52 @@ func (handler *Handlers) ReverseProxy(c *gin.Context) {
 			<-quitChan
 
 			logrus.Info("websocket finished")
+		}
+	}
+}
+
+func (handler *Handlers) ReverseProxySshCommand(c *gin.Context) {
+	var (
+		nm        = c.PostForm("nm_name")
+		cmd       = c.PostForm("cmd")
+		frpcs     []model.FrpServer
+		err       error
+		sshClient *ssh.Client
+		session   *ssh.Session
+	)
+	// 根据nodemaintenances_name获取unique_id通过Frps映射到相应的frpc,拿到frpc的相关数据
+	if frpcs, err = frps_fetch.FetchFromFrps(); err != nil {
+		helpers.RenderFailureJSON(c, http.StatusBadRequest, fmt.Sprintf("can't get data from frps, err is %v", err))
+		return
+	}
+	for _, frpc := range frpcs {
+		// 找到本次post请求需要进行反向代理的节点
+		if frpc.UniqueID == strings.Split(nm, "-")[1] {
+			// 如果frpc的节点状态是离线则无法进行反向代理
+			// 确认frpc节点当前是online状态之后再继续进行后续的操作
+			if frpc.Status == model.FrpOffline {
+				helpers.RenderFailureJSON(c, http.StatusBadRequest, fmt.Sprintf("frp client %v is offline now", frpc.UniqueID))
+				return
+			}
+			// 创建ssh client客户端
+			if sshClient, err = core_ssh.NewSshClient(frpc.PublicIpAddress, frpc.Port); err != nil {
+				helpers.RenderFailureJSON(c, http.StatusBadRequest, fmt.Sprintf("ssh client create failed, err is: %v", err))
+				return
+			}
+			defer sshClient.Close()
+			// create session
+			if session, err = sshClient.NewSession(); err != nil {
+				helpers.RenderFailureJSON(c, http.StatusBadRequest, fmt.Sprintf("ssh client new session failed, err is: %v", err))
+				return
+			}
+			defer session.Close()
+			// execute shell command
+			if session.Run(cmd) != nil {
+				helpers.RenderFailureJSON(c, http.StatusBadRequest, fmt.Sprintf("execute shell command %v failed, err is: %v", cmd, err))
+				return
+			}
+			helpers.RenderSuccessJSON(c, http.StatusOK, fmt.Sprintf("execute shell command %v successfully", cmd))
+			return
 		}
 	}
 }

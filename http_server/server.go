@@ -28,6 +28,9 @@ func New(dynamicClient dynamic.Interface, frpsConfig *config.FrpsConfig, gvr sch
 	router.PUT("/nm_useless", nmUselessHandlers.NmUseless) // PUT /nm_useless make all nodemaintenances objects become useless
 
 	// reserve proxy
-	router.GET("/reverse_proxy/:nm_name", reverseProxyHandlers.ReverseProxy)
+	router.GET("/reverse_proxy/:nm_name", reverseProxyHandlers.ReverseProxy) //反向代理建立ssh session并维持长连接
+
+	// reserve shell command
+	router.POST("/reverse_shell_command/:nm_name", reverseProxyHandlers.ReverseProxySshCommand)
 	return router
 }
