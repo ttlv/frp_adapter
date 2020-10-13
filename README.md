@@ -108,6 +108,22 @@ nm_name: NM对象的名字(具体格式为nodemaintenances-xxxx，xxxx是unique_
 
 web或者是cli以websocket的形式发起请求，建立连接，以ssh方式远程登录到目标节点
 
+#### 2. /reverse_proxy_shell
+
+##### 请求方式
+
+POST
+
+##### 请求参数
+
+nm_name: NM对象的名字(具体格式为nodemaintenances-xxxx，xxxx是unique_id)
+
+cmd: 待执行的shell命令的字符串
+
+##### api功能介绍
+
+反向代理建立ssh连接执行shell命令
+
 # Frp Adapter架构设计图
 
 ![Frp Adapter 架构图](https://images-1253546493.cos.ap-shanghai.myqcloud.com/frpa.jpg)
@@ -137,7 +153,7 @@ spec:
     spec:
       containers:
       - name: frp-adapter
-        image: gopherlv/frp-adapter:frp-adapter-9f9c0d6b
+        image: gopherlv/frp-adapter:frp-adapter-48821173
         env:
           - name: FRP_ADAPTER_ADDRESS
             value: :8888
