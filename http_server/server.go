@@ -31,6 +31,6 @@ func New(dynamicClient dynamic.Interface, frpsConfig *config.FrpsConfig, gvr sch
 	router.GET("/reverse_proxy/:nm_name", reverseProxyHandlers.ReverseProxy) //反向代理建立ssh session并维持长连接
 
 	// reserve shell command
-	router.POST("/reverse_shell_command", reverseProxyHandlers.ReverseProxySshCommand)
+	router.POST("/reverse_proxy_shell", reverseProxyHandlers.ReverseProxySshCommand)
 	return router
 }
