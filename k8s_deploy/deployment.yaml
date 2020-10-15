@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
       - name: frp-adapter
-        image: gopherlv/frp-adapter:frp-adapter-xxxxx #just input your id
+        image: gopherlv/frp-adapter:frp-adapter-7f9f71f4 #just input your id
         env:
           - name: FRP_ADAPTER_ADDRESS
             value: :8888
