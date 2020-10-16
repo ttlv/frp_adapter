@@ -31,16 +31,16 @@ func (handler *Handlers) FrpCreate(c *gin.Context) {
 		nms []model.FrpServer
 	)
 	nms = append(nms, model.FrpServer{
-		PublicIpAddress: c.Request.FormValue("frp_server_ip_address"),
+		PublicIpAddress: c.PostForm("frp_server_ip_address"),
 		Status:          model.FrpOnline,
-		UniqueID:        c.Request.FormValue("unique_id"),
-		Port:            c.Request.FormValue("port"),
+		UniqueID:        c.PostForm("unique_id"),
+		Port:            c.PostForm("port"),
 	})
 	if err := nm_action.NmCreate(handler.DynamicClient, handler.GVR, nms); err != nil {
 		helpers.RenderFailureJSON(c, http.StatusBadRequest, fmt.Sprintf("can't create nodemaintenances crd resource in k8s cluster,err is:%v", err))
 		return
 	}
-	helpers.RenderSuccessJSON(c, http.StatusOK, fmt.Sprintf("create nodemaintenances-%v crd resource in k8s cluster successfully", c.Request.FormValue("unique_id")))
+	helpers.RenderSuccessJSON(c, http.StatusOK, fmt.Sprintf("create nodemaintenances-%v crd resource in k8s cluster successfully", c.PostForm("unique_id")))
 	return
 }
 
@@ -51,13 +51,13 @@ func (handler *Handlers) FrpUpdate(c *gin.Context) {
 		frpServers = []model.FrpServer{}
 	)
 	frpServers = append(frpServers, model.FrpServer{
-		PublicIpAddress: c.PostForm("frp_server_ip_address"),
-		Status:          c.PostForm("status"),
-		UniqueID:        c.PostForm("unique_id"),
-		Port:            c.PostForm("port"),
+		PublicIpAddress: c.Request.FormValue("frp_server_ip_address"),
+		Status:          c.Request.FormValue("status"),
+		UniqueID:        c.Request.FormValue("unique_id"),
+		Port:            c.Request.FormValue("port"),
 	})
 	// 更新前判断nm资源是否存在，避免frpc已经接入frps但是没有nm对象的情况，如果不存在应该先创建
-	if !nm_action.NMExist(handler.DynamicClient, handler.GVR, c.PostForm("unique_id")) {
+	if !nm_action.NMExist(handler.DynamicClient, handler.GVR, c.Request.FormValue("unique_id")) {
 		err = nm_action.NmCreate(handler.DynamicClient, handler.GVR, frpServers)
 		if err != nil {
 			helpers.RenderFailureJSON(c, http.StatusBadRequest, fmt.Sprintf("created failed: %v", err))
