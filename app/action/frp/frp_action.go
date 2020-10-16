@@ -31,16 +31,16 @@ func (handler *Handlers) FrpCreate(c *gin.Context) {
 		nms []model.FrpServer
 	)
 	nms = append(nms, model.FrpServer{
-		PublicIpAddress: c.PostForm("frp_server_ip_address"),
+		PublicIpAddress: c.Request.FormValue("frp_server_ip_address"),
 		Status:          model.FrpOnline,
-		UniqueID:        c.PostForm("unique_id"),
-		Port:            c.PostForm("port"),
+		UniqueID:        c.Request.FormValue("unique_id"),
+		Port:            c.Request.FormValue("port"),
 	})
 	if err := nm_action.NmCreate(handler.DynamicClient, handler.GVR, nms); err != nil {
 		helpers.RenderFailureJSON(c, http.StatusBadRequest, fmt.Sprintf("can't create nodemaintenances crd resource in k8s cluster,err is:%v", err))
 		return
 	}
-	helpers.RenderSuccessJSON(c, http.StatusOK, fmt.Sprintf("create nodemaintenances-%v crd resource in k8s cluster successfully", c.PostForm("unique_id")))
+	helpers.RenderSuccessJSON(c, http.StatusOK, fmt.Sprintf("create nodemaintenances-%v crd resource in k8s cluster successfully", c.Request.FormValue("unique_id")))
 	return
 }
 
