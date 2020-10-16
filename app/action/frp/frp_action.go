@@ -63,12 +63,11 @@ func (handler *Handlers) FrpUpdate(c *gin.Context) {
 			helpers.RenderFailureJSON(c, http.StatusBadRequest, fmt.Sprintf("created failed: %v", err))
 			return
 		}
-	} else {
-		err = nm_action.NMNormalUpdate(handler.DynamicClient, handler.GVR, frpServers)
-		if err != nil {
-			helpers.RenderFailureJSON(c, http.StatusBadRequest, fmt.Sprintf("update failed: %v", err))
-			return
-		}
+	}
+	err = nm_action.NMNormalUpdate(handler.DynamicClient, handler.GVR, frpServers)
+	if err != nil {
+		helpers.RenderFailureJSON(c, http.StatusBadRequest, fmt.Sprintf("update failed: %v", err))
+		return
 	}
 	helpers.RenderSuccessJSON(c, http.StatusOK, "Update Successfully")
 	return
