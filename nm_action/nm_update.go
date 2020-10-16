@@ -71,7 +71,7 @@ func NMNormalUpdate(dynamicClient dynamic.Interface, gvr schema.GroupVersionReso
 		retryErr := retry.RetryOnConflict(retry.DefaultRetry, func() error {
 			result, getErr := dynamicClient.Resource(gvr).Get(fmt.Sprintf("nodemaintenances-%v", frpServer.UniqueID), metav1.GetOptions{})
 			if getErr != nil {
-				return fmt.Errorf("failed to get latest version of NodeMaintenance: %v", getErr)
+				return fmt.Errorf("failed to get latest version of NodeMaintenance-%v,err is: %v", frpServer.UniqueID, getErr)
 			}
 			// update sepc.services
 			if frpServer.PublicIpAddress != "" && frpServer.Port != "" {
