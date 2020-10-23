@@ -3,6 +3,8 @@ package home
 import (
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/sessions"
+	"github.com/ttlv/frp_adapter/app/helpers"
+	"net/http"
 )
 
 type Handlers struct {
@@ -14,5 +16,5 @@ func NewHandlers() Handlers {
 }
 
 func (handlers Handlers) Home(c *gin.Context) {
-	c.Writer.Write([]byte("Frp Adapter Is Working Now...."))
+	helpers.RenderSuccessJSON(c, http.StatusOK, "Frp Adapter Is Working Now....")
 }

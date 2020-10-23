@@ -147,11 +147,13 @@ func (handler *Handlers) ReverseProxySshCommand(c *gin.Context) {
 			}
 			defer session.Close()
 			// execute shell command
-			if session.Run(cmd) != nil {
+
+			result, err := session.Output(cmd)
+			if err != nil {
 				helpers.RenderFailureJSON(c, http.StatusBadRequest, fmt.Sprintf("execute shell command %v failed, err is: %v", cmd, err))
 				return
 			}
-			helpers.RenderSuccessJSON(c, http.StatusOK, fmt.Sprintf("execute shell command %v successfully", cmd))
+			helpers.RenderSuccessJSON(c, http.StatusOK, fmt.Sprintf("execute shell command %v successfully,the result is: %v", cmd, strings.TrimSpace(string(result))))
 			return
 		}
 	}

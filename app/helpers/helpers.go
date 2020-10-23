@@ -10,6 +10,7 @@ import (
 
 func RenderFailureJSON(c *gin.Context, code int, message string) {
 	c.JSON(code, entries.Error{
+		Code: code,
 		Error: entries.ErrorDetail{
 			Message: message,
 		},
@@ -18,6 +19,7 @@ func RenderFailureJSON(c *gin.Context, code int, message string) {
 
 func RenderSuccessJSON(c *gin.Context, code int, data interface{}) {
 	c.JSON(code, entries.Success{
+		Code: code,
 		Data: data,
 	})
 }
