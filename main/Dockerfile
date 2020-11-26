@@ -1,8 +1,4 @@
-FROM alpine
-RUN apk --update upgrade && \
-    apk add ca-certificates && \
-    apk add tzdata && \
-    rm -rf /var/cache/apk/*
+FROM ubuntu:latest
 RUN mkdir -p /root/.kube
 ADD frp-adapter /bin/
 ADD config /root/.kube
