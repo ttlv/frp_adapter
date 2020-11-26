@@ -20,6 +20,7 @@ func New(dynamicClient dynamic.Interface, frpsConfig *config.FrpsConfig, gvr sch
 	reverseProxyHandlers := reverse_proxy.NewHandlers(1024, 1024*1024*10)
 	// home页面,主要用于发起请求验证frp adapter是否存活
 	router.GET("/", homeHandlers.Home)
+	router.GET("/apis/edge.harmonycloud.cn/v1alpha1", homeHandlers.Home)
 
 	router.GET("/frp_fetch/:nm_name", frpHandlers.FrpFetch) // GET /frp_adapter/fetch/xxxxxx
 	router.POST("/frp_create", frpHandlers.FrpCreate)       // POST /frp_adapter/create
