@@ -8,12 +8,30 @@ import (
 	"github.com/ttlv/frp_adapter/http_server"
 	"github.com/ttlv/frp_adapter/model"
 	"github.com/ttlv/frp_adapter/nm_action"
+	"github.com/unrolled/secure"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/client-go/dynamic"
 	"log"
 	"net/http"
 	"strings"
 )
+
+func LoadTls() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		middleware := secure.New(secure.Options{
+			SSLRedirect: true,
+			SSLHost:     "localhost:8080",
+		})
+		err := middleware.Process(c.Writer, c.Request)
+		if err != nil {
+			// 如果出现错误，请不要继续
+			fmt.Println(err)
+			return
+		}
+		// 继续往下处理
+		c.Next()
+	}
+}
 
 func Cors() gin.HandlerFunc {
 	return func(c *gin.Context) {
@@ -83,5 +101,6 @@ func main() {
 	}
 	router := gin.Default()
 	router.Use(Cors())
-	http_server.New(dynamicClient, frp_adapter_init.FrpsConfig, gvr, router).Run(frp_adapter_init.FrpAdapterConfig.Address)
+	router.Use(LoadTls())
+	http_server.New(dynamicClient, frp_adapter_init.FrpsConfig, gvr, router).RunTLS(":8080", "cert.pem", "key.pem")
 }
