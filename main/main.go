@@ -2,6 +2,10 @@ package main
 
 import (
 	"fmt"
+	"log"
+	"net/http"
+	"strings"
+
 	"github.com/gin-gonic/gin"
 	"github.com/ttlv/frp_adapter/frp_adapter_init"
 	"github.com/ttlv/frp_adapter/frps_action/frps_fetch"
@@ -11,9 +15,6 @@ import (
 	"github.com/unrolled/secure"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/client-go/dynamic"
-	"log"
-	"net/http"
-	"strings"
 )
 
 func LoadTls() gin.HandlerFunc {
@@ -102,5 +103,5 @@ func main() {
 	router := gin.Default()
 	router.Use(Cors())
 	router.Use(LoadTls())
-	http_server.New(dynamicClient, frp_adapter_init.FrpsConfig, gvr, router).RunTLS(":8080", "cert.pem", "key.pem")
+	http_server.New(dynamicClient, frp_adapter_init.FrpsConfig, gvr, router).RunTLS(":8080", "/root/cert.pem", "/root/key.pem")
 }
