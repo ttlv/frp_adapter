@@ -12,7 +12,7 @@ import (
 
 func NmCreate(dynamicClient dynamic.Interface, gvr schema.GroupVersionResource, frpServers []model.FrpServer) (err error) {
 	for _, frpServer := range frpServers {
-		if frpServer.UniqueID != "" {
+	if frpServer.UniqueID != "" {
 			result, getErr := dynamicClient.Resource(gvr).Get(fmt.Sprintf("nodemaintenances-%v", frpServer.UniqueID), metav1.GetOptions{})
 			if getErr != nil {
 				// 捕捉到错误说明当前frpc的unique的nm对象不存在需要重新创建
@@ -60,7 +60,6 @@ func NmCreate(dynamicClient dynamic.Interface, gvr schema.GroupVersionResource, 
 				return fmt.Errorf(fmt.Sprintf("Init status object failed,err is: %v", err))
 			}
 			log.Println(fmt.Sprintf("Init status object Successfully and init %v object successfully", fmt.Sprintf("nodemaintenances-%v", frpServer.UniqueID)))
-			return
 		}
 	}
 	return

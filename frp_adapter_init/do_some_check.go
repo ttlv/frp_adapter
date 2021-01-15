@@ -34,7 +34,7 @@ func FrpAdapterCheck(dynamicClient dynamic.Interface, gvr schema.GroupVersionRes
 			// shortUniqueIDs数组长度为0说明k8s中不存在nm对象，要把results全部创建
 			log.Println("There is not any unique_id in k8s cluster and frp adapter will create all nodemaintenances in k8s cluster")
 			if err = nm_action.NmCreate(dynamicClient, gvr, results); err != nil {
-				// 如果穿线无法创建的错误一般都是k8s集群存在问题，重试毫无意义，仅仅在日志中打印错误，不会继续后续的InitNMUpdate和NMNormalUpdate操作
+				// 如果出现无法创建的错误一般都是k8s集群存在问题，重试毫无意义，仅仅在日志中打印错误，不会继续后续的InitNMUpdate和NMNormalUpdate操作
 				errString += fmt.Sprintf("There are some fatal errors in k8s cluster \n")
 			} else {
 				for _, result := range results {

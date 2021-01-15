@@ -103,5 +103,5 @@ func main() {
 	router := gin.Default()
 	router.Use(Cors())
 	router.Use(LoadTls())
-	http_server.New(dynamicClient, frp_adapter_init.FrpsConfig, gvr, router).RunTLS(":8080", "/root/cert.pem", "/root/key.pem")
+	http_server.New(dynamicClient, frp_adapter_init.FrpsConfig, gvr, router).RunTLS(":8080", "/root/server.pem", "/root/server.key")
 }
