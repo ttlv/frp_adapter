@@ -7,5 +7,5 @@ build:
 
 push: build
 	@$(eval REV := $(shell git rev-parse HEAD|cut -c 1-8))
-	@docker tag frp-adapter 10.1.11.196/library/frp-adapter/frp-adapter:frp-adapter-$(REV)
-	@docker push 10.1.11.196/library/frp-adapter/frp-adapter:frp-adapter-$(REV)
+	@docker tag frp-adapter 10.1.11.196/library/frp-adapter/frp-adapter-$(REV)
+	@docker push 10.1.11.196/library/frp-adapter/frp-adapter-$(REV)
