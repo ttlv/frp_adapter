@@ -52,8 +52,8 @@ func FrpAdapterCheck(dynamicClient dynamic.Interface, gvr schema.GroupVersionRes
 			}
 		} else {
 			for _, unique_id := range frpsUniqueIDs {
+				count := 0
 				for _, nm := range nms {
-					count := 0
 					if nm != unique_id {
 						count += 1
 					} else {
