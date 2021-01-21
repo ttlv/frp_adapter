@@ -2,10 +2,10 @@ SHELL = /bin/bash
 
 build:
 	@GOOS=linux CGO_ENABLED=0 GOARCH=amd64 go build -o frp-adapter main.go
-	@docker build -t gopherlv/frp-adapter .
+	@docker build -t frp-adapter .
 	@rm frp-adapter
 
 push: build
 	@$(eval REV := $(shell git rev-parse HEAD|cut -c 1-8))
-	@docker tag gopherlv/frp-adapter gopherlv/frp-adapter:frp-adapter-$(REV)
-	@docker push gopherlv/frp-adapter:frp-adapter-$(REV)
+	@docker tag frp-adapter frp-adapter:frp-adapter-$(REV)
+	@docker push 10.1.11.196/library/frp-adapter:frp-adapter-$(REV)
