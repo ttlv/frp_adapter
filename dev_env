@@ -1,4 +1,3 @@
-export FRP_ADAPTER_ADDRESS=":8888"
 export FRP_SERVER_HTTPAUTHUSERNAME="admin"
 export FRP_SERVER_HTTPAUTHPASSWORD="admin"
 export FRP_SERVER_API="http://10.1.11.66:7500/api/proxy/tcp"
