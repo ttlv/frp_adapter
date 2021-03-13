@@ -35,6 +35,7 @@ func (handler *Handlers) FrpCreate(c *gin.Context) {
 		Status:          model.FrpOnline,
 		UniqueID:        c.PostForm("unique_id"),
 		Port:            c.PostForm("port"),
+		MacAddress:      c.PostForm("mac_address"),
 	})
 	if err := nm_action.NmCreate(handler.DynamicClient, handler.GVR, nms); err != nil {
 		helpers.RenderFailureJSON(c, http.StatusBadRequest, fmt.Sprintf("can't create nodemaintenances crd resource in k8s cluster,err is:%v", err))

@@ -38,6 +38,9 @@ func FetchFromFrps() (frpServers []model.FrpServer, err error) {
 		if value.Get("conf.remote_port").String() != "" {
 			frpServer.Port = value.Get("conf.remote_port").String()
 		}
+		if value.Get("mac_address").String() != "" {
+			frpServer.MacAddress = value.Get("mac_address").String()
+		}
 		frpServers = append(frpServers, frpServer)
 		return true
 	})
