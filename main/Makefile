@@ -7,6 +7,6 @@ build:
 
 push: build
 	@$(eval REV := $(shell git rev-parse HEAD|cut -c 1-8))
-	@docker tag frp-adapter gopherlv/frp-adapter-http:frpa-http-$(REV)
-	@docker push gopherlv/frp-adapter-http:frpa-http-$(REV)
+	@docker tag frp-adapter gopherlv/frp-adapter-http:$(REV)
+	@docker push gopherlv/frp-adapter-http:$(REV)
 
