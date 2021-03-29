@@ -76,7 +76,7 @@ func main() {
 				log.Println(err)
 			}
 		}
-		log.Print(err)
+		log.Println(err.Error())
 	}
 	// frpa重启或者是程序初始化时做的一些必要的操作
 	if len(results) != 0 {

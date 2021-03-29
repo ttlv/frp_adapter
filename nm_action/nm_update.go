@@ -89,6 +89,12 @@ func NMNormalUpdate(dynamicClient dynamic.Interface, gvr schema.GroupVersionReso
 					return fmt.Errorf("SetNestedSlice spec.services error: %v", err)
 				}
 			}
+			// update hostname
+			if frpServer.HostName != "" {
+				if err = unstructured.SetNestedField(result.Object, frpServer.HostName, "hostName"); err != nil {
+					return fmt.Errorf("SetNestedSlice hostName error: %v", err)
+				}
+			}
 			// update status.services & update status.conditions
 			if frpServer.Status != "" {
 				if frpServer.Status == model.FrpOnline {

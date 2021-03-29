@@ -7,6 +7,7 @@ import (
 	"github.com/ttlv/common_utils/utils"
 	"github.com/ttlv/frp_adapter/frp_adapter_init"
 	"github.com/ttlv/frp_adapter/model"
+	"strings"
 )
 
 func FetchFromFrps() (frpServers []model.FrpServer, err error) {
@@ -17,6 +18,10 @@ func FetchFromFrps() (frpServers []model.FrpServer, err error) {
 	)
 	headers["Authorization"] = fmt.Sprintf("Basic %v", authorization)
 	if resp, err = utils.Get(frp_adapter_init.FrpsConfig.Api, nil, headers); err != nil {
+		return
+	}
+	if strings.TrimSpace(resp) == "Unauthorized" {
+		err = fmt.Errorf("无效的HTTPAUTH")
 		return
 	}
 	// Frps重启或者是当前没有frpc连入frps
@@ -40,6 +45,9 @@ func FetchFromFrps() (frpServers []model.FrpServer, err error) {
 		}
 		if value.Get("mac_address").String() != "" {
 			frpServer.MacAddress = value.Get("mac_address").String()
+		}
+		if value.Get("host_name").String() != "" {
+			frpServer.HostName = value.Get("host_name").String()
 		}
 		frpServers = append(frpServers, frpServer)
 		return true

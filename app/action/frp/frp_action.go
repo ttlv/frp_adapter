@@ -56,6 +56,7 @@ func (handler *Handlers) FrpUpdate(c *gin.Context) {
 		Status:          c.Request.FormValue("status"),
 		UniqueID:        c.Request.FormValue("unique_id"),
 		Port:            c.Request.FormValue("port"),
+		HostName:        c.Request.FormValue("host_name"),
 	})
 	// 更新前判断nm资源是否存在，避免frpc已经接入frps但是没有nm对象的情况，如果不存在应该先创建
 	if !nm_action.NMExist(handler.DynamicClient, handler.GVR, c.Request.FormValue("unique_id")) {

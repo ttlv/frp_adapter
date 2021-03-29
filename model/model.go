@@ -11,4 +11,5 @@ type FrpServer struct {
 	UniqueID        string
 	Port            string
 	MacAddress      string
+	HostName        string
 }

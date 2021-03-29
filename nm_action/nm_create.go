@@ -38,10 +38,11 @@ func NmCreate(dynamicClient dynamic.Interface, gvr schema.GroupVersionResource, 
 									"proxyPort":          frpServer.Port,
 									"frpServerIpAddress": frpServer.PublicIpAddress,
 									"uniqueID":           frpServer.UniqueID,
-									"macAddress":         frpServer.MacAddress,
 								},
 							},
 						},
+						"macAddress": frpServer.MacAddress,
+						"hostName":   frpServer.HostName,
 					},
 				}
 				// Create Deployment
