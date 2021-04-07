@@ -91,7 +91,7 @@ func NMNormalUpdate(dynamicClient dynamic.Interface, gvr schema.GroupVersionReso
 			}
 			// update hostname
 			if frpServer.HostName != "" {
-				if err = unstructured.SetNestedField(result.Object, frpServer.HostName, "hostName"); err != nil {
+				if err = unstructured.SetNestedField(result.Object, frpServer.HostName, "spec", "hostName"); err != nil {
 					return fmt.Errorf("SetNestedSlice hostName error: %v", err)
 				}
 			}

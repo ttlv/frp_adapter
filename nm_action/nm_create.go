@@ -26,7 +26,9 @@ func NmCreate(dynamicClient dynamic.Interface, gvr schema.GroupVersionResource, 
 							"annotation": map[string]interface{}{},
 						},
 						"spec": map[string]interface{}{
-							"nodeName": fmt.Sprintf("node-%v", frpServer.UniqueID),
+							"nodeName":   fmt.Sprintf("node-%v", frpServer.UniqueID),
+							"macAddress": frpServer.MacAddress,
+							"hostName":   frpServer.HostName,
 							"proxy": map[string]interface{}{
 								"type":     "FRP",
 								"endpoint": "",
@@ -41,8 +43,6 @@ func NmCreate(dynamicClient dynamic.Interface, gvr schema.GroupVersionResource, 
 								},
 							},
 						},
-						"macAddress": frpServer.MacAddress,
-						"hostName":   frpServer.HostName,
 					},
 				}
 				// Create Deployment
