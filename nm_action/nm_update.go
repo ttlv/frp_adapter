@@ -95,6 +95,12 @@ func NMNormalUpdate(dynamicClient dynamic.Interface, gvr schema.GroupVersionReso
 					return fmt.Errorf("SetNestedSlice hostName error: %v", err)
 				}
 			}
+			// update macaddress
+			if frpServer.MacAddress != "" {
+				if err = unstructured.SetNestedField(result.Object, frpServer.MacAddress, "spec", "macAddress"); err != nil {
+					return fmt.Errorf("SetNestedSlice macAddress error: %v", err)
+				}
+			}
 			// update status.services & update status.conditions
 			if frpServer.Status != "" {
 				if frpServer.Status == model.FrpOnline {
