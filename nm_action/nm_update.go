@@ -83,22 +83,12 @@ func NMNormalUpdate(dynamicClient dynamic.Interface, gvr schema.GroupVersionReso
 					if obj.(map[string]interface{})["name"] == fmt.Sprintf("ssh-%v", frpServer.UniqueID) {
 						obj.(map[string]interface{})["frpServerIpAddress"] = frpServer.PublicIpAddress
 						obj.(map[string]interface{})["proxyPort"] = frpServer.Port
+						obj.(map[string]interface{})["hostName"] = frpServer.HostName
+						obj.(map[string]interface{})["macAddress"] = frpServer.MacAddress
 					}
 				}
 				if err = unstructured.SetNestedSlice(result.Object, objs, "spec", "services"); err != nil {
 					return fmt.Errorf("SetNestedSlice spec.services error: %v", err)
-				}
-			}
-			// update hostname
-			if frpServer.HostName != "" {
-				if err = unstructured.SetNestedField(result.Object, frpServer.HostName, "spec", "hostName"); err != nil {
-					return fmt.Errorf("SetNestedSlice hostName error: %v", err)
-				}
-			}
-			// update macaddress
-			if frpServer.MacAddress != "" {
-				if err = unstructured.SetNestedField(result.Object, frpServer.MacAddress, "spec", "macAddress"); err != nil {
-					return fmt.Errorf("SetNestedSlice macAddress error: %v", err)
 				}
 			}
 			// update status.services & update status.conditions
