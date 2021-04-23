@@ -2,6 +2,8 @@ package nm_action
 
 import (
 	"fmt"
+	"github.com/mitchellh/mapstructure"
+	"github.com/ttlv/nodemaintenances/api/v1alpha1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime/schema"
@@ -23,6 +25,22 @@ func NMFetchAll(dynamicClient dynamic.Interface, gvr schema.GroupVersionResource
 		}
 		nms = append(nms, strings.Split(nmNmae, "-")[1])
 	}
+	return
+}
+
+//获取uid对应的nm
+func NMFetchOne(dynamicClient dynamic.Interface, gvr schema.GroupVersionResource, uniqueID string) (nm v1alpha1.NodeMaintenance, err error){
+	nmResource, err := dynamicClient.Resource(gvr).Get(fmt.Sprintf("nodemaintenances-%v", uniqueID), metav1.GetOptions{})
+	if err != nil {
+		err = fmt.Errorf(fmt.Sprintf("NM get failed,err is: %v"))
+		return
+	}
+	//map转struct
+	err = mapstructure.Decode(nmResource.Object, &nm)
+	if err != nil {
+		fmt.Println(err)
+	}
+
 	return
 }
 
