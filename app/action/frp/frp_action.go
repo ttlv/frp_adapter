@@ -43,7 +43,7 @@ func (handler *Handlers) FrpCreate(c *gin.Context) {
 		return
 	}
 	//nm创建成功后，发送通知
-	notification.Notice("创建","offline",c)
+	notification.Notice("创建","Not created",c)
 	helpers.RenderSuccessJSON(c, http.StatusOK, fmt.Sprintf("create nodemaintenances-%v crd resource in k8s cluster successfully", c.PostForm("unique_id")))
 	return
 }
@@ -70,7 +70,7 @@ func (handler *Handlers) FrpUpdate(c *gin.Context) {
 		}
 	}
 	//在nm更新前获取status
-	status ,err:=nm_action.NMGet(handler.DynamicClient, handler.GVR, c.Request.FormValue("unique_id"))
+	nm ,err:=nm_action.NMFetchOne(handler.DynamicClient, handler.GVR, c.Request.FormValue("unique_id"))
 	if err != nil {
 		helpers.RenderFailureJSON(c, http.StatusBadRequest, fmt.Sprintf("created failed: %v", err))
 		return
@@ -82,7 +82,7 @@ func (handler *Handlers) FrpUpdate(c *gin.Context) {
 		return
 	}
 	//更新成果后发送通知
-	notification.Notice("更新",status,c)
+	notification.Notice("更新",nm.Status.Services[0].Status,c)
 	helpers.RenderSuccessJSON(c, http.StatusOK, "Update Successfully")
 	return
 }

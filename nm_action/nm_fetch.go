@@ -1,8 +1,9 @@
 package nm_action
 
 import (
-	"encoding/json"
 	"fmt"
+	"github.com/mitchellh/mapstructure"
+	"github.com/ttlv/nodemaintenances/api/v1alpha1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime/schema"
@@ -27,25 +28,17 @@ func NMFetchAll(dynamicClient dynamic.Interface, gvr schema.GroupVersionResource
 	return
 }
 
-//获取status信息
-func NMGet(dynamicClient dynamic.Interface, gvr schema.GroupVersionResource, uniqueID string) (status string, err error){
-	nm, err := dynamicClient.Resource(gvr).Get(fmt.Sprintf("nodemaintenances-%v", uniqueID), metav1.GetOptions{})
+//获取uid对应的nm
+func NMFetchOne(dynamicClient dynamic.Interface, gvr schema.GroupVersionResource, uniqueID string) (nm v1alpha1.NodeMaintenance, err error){
+	nmResource, err := dynamicClient.Resource(gvr).Get(fmt.Sprintf("nodemaintenances-%v", uniqueID), metav1.GetOptions{})
 	if err != nil {
 		err = fmt.Errorf(fmt.Sprintf("NM get failed,err is: %v"))
 		return
 	}
-	nmNmae, found1, getErr := unstructured.NestedSlice(nm.Object, "status","services")
-	if  !found1 || getErr != nil {
-		err = fmt.Errorf(fmt.Sprintf("NM fetch failed, err is: %v", getErr))
-	}
-	//nmNmae为[]interface{}，转换为string
-	str1, _ :=json.Marshal(nmNmae)
-	if strings.Contains(string(str1),"offline"){
-		status ="offline"
-	}else if strings.Contains(string(str1),"online"){
-		status ="online"
-	}else {
-		err = fmt.Errorf(fmt.Sprintf("NM get failed,err is: %v"))
+	//map转struct
+	err = mapstructure.Decode(nmResource.Object, &nm)
+	if err != nil {
+		fmt.Println(err)
 	}
 
 	return
