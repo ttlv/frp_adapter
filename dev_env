@@ -1,3 +1,4 @@
 export FRP_SERVER_HTTPAUTHUSERNAME="admin"
 export FRP_SERVER_HTTPAUTHPASSWORD="admin"
 export FRP_SERVER_API="http://10.1.11.66:7500/api/proxy/tcp"
+export FRP_SERVER_WEBHOOK="https://oapi.dingtalk.com/robot/send?access_token=41d052ecba12f0ec45f4e68657e3dd0544b2b1ceb71d40b64240416881e7826b"

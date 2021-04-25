@@ -12,6 +12,7 @@ type FrpsConfig struct {
 	HttpAuthUserName string
 	HttpAuthPassword string
 	Api              string
+	Webhook          string
 }
 
 var _frpAdapterConfig *FrpAdapterConfig
